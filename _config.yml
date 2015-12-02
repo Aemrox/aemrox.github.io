@@ -3,11 +3,11 @@
 # ----------------------- #
 
 url: http://yoursite.com
-title: My Octopress Blog
-subtitle: A blogging framework for hackers.
-author: Your Name
+title: Gem Hoarding
+subtitle: It's still easier than Dwarf Fortress
+author: Adam May
 simple_search: https://www.google.com/search
-description:
+description: Some thoughts and struggles as I work my way through Flatiron School's Web Immersive and learn how to build things. Making mama proud. 
 
 # Default date format is "ordinal" (resulting in "July 22nd 2007")
 # You can customize the format as defined in
