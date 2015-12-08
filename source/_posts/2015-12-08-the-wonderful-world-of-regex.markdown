@@ -38,15 +38,15 @@ Let’s look at some of the basic rules:
 
 regex recognizes all of our basic characters, so if you were to just type in a word it would match:
 
-![Basic Capture Image](../Images/Basic Capture.png)
+![Basic Capture Image](https://github.com/Aemrox/aemrox.github.io/blob/master/images/Basic%20Capture.png)
 
 There are also modifiers that you can add to the end of expressions, such as “i”, which allows you to recognize any case:
 
-![Case Capture Image](../Images/Capture Case.png)
+![Case Capture Image](https://github.com/Aemrox/aemrox.github.io/blob/master/images/Capture%20Case.png)
 
 You can also capture ranges of characters, with the following syntax:
 
-![All the Letters!](../Images/range of letters.png)
+![All the Letters!](https://raw.githubusercontent.com/Aemrox/aemrox.github.io/master/images/All%20the%20periods.png)
 
 What you surround your capture group with matters as well. If you surround it with [brackets] it will match any character in the group. However, if you surround it with (parenthesis) it will only match the full word!
 
