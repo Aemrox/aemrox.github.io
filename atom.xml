@@ -4,7 +4,7 @@
   <title><![CDATA[Ride or Pry]]></title>
   <link href="http://aemrox.github.io/atom.xml" rel="self"/>
   <link href="http://aemrox.github.io/"/>
-  <updated>2015-12-08T15:05:18-05:00</updated>
+  <updated>2015-12-08T15:09:17-05:00</updated>
   <id>http://aemrox.github.io/</id>
   <author>
     <name><![CDATA[Adam May]]></name>
@@ -50,15 +50,15 @@ Ruby recognizes regular expressions when you offset them by two backslashes, or 
 
 <p>regex recognizes all of our basic characters, so if you were to just type in a word it would match:</p>
 
-<p><img src="../Images/Basic%20Capture.png" alt="Basic Capture Image" /></p>
+<p><img src="https://github.com/Aemrox/aemrox.github.io/blob/master/images/Basic%20Capture.png" alt="Basic Capture Image" /></p>
 
 <p>There are also modifiers that you can add to the end of expressions, such as “i”, which allows you to recognize any case:</p>
 
-<p><img src="../Images/Capture%20Case.png" alt="Case Capture Image" /></p>
+<p><img src="https://github.com/Aemrox/aemrox.github.io/blob/master/images/Capture%20Case.png" alt="Case Capture Image" /></p>
 
 <p>You can also capture ranges of characters, with the following syntax:</p>
 
-<p><img src="../Images/range%20of%20letters.png" alt="All the Letters!" /></p>
+<p><img src="https://raw.githubusercontent.com/Aemrox/aemrox.github.io/master/images/All%20the%20periods.png" alt="All the Letters!" /></p>
 
 <p>What you surround your capture group with matters as well. If you surround it with [brackets] it will match any character in the group. However, if you surround it with (parenthesis) it will only match the full word!</p>
 
