@@ -18,11 +18,11 @@ Regex stands for Regular Expressions, and is a very powerful tool used for ident
 
 We would write regular expressions to begin automatically filtering and flagging the articles we were pulling in for items that didn’t fit what we were doing, like sponsored advertising:
 
-```/((East|West)? ?([0-9]+|[A-Z][a-z]+|first|second|third|[a-z]+th)(st|th|nd|rd))/```
+`/((East|West)? ?([0-9]+|[A-Z][a-z]+|first|second|third|[a-z]+th)(st|th|nd|rd))/`
 
 But more importantly, we wrote a series of expressions that would look for the prepositions connecting areas, or the patterns of addresses. Here are some of the finished products:
 
-```/sponsored/i```
+`/sponsored/i`
 
 
 But let’s not get ahead of ourselves. Let’s start with the basics of Regex.
@@ -31,64 +31,64 @@ But let’s not get ahead of ourselves. Let’s start with the basics of Regex.
 At its most basic, regex is just writing expressions that try to match combinations of characters. Every string can be broken down into characters, so if why wouldn’t we be able to codify some kind of logic that allows us to build up every combination we see in the real world. That’s what the regex engine does.
 Ruby recognizes regular expressions when you offset them by two backslashes, or with %r()
 
-```/this is a regex expression/  
-%r(and this is to!) ```
+`/this is a regex expression/  
+%r(and this is to!) `
 
 Let’s look at some of the basic rules:
 
 regex recognizes all of our basic characters, so if you were to just type in a word it would match:
 
-![Basic Capture Image](/Users/flatironschool/Development/code/blog/octopress/Regex_proj/Images/Basic Capture.png)
+![Basic Capture Image](../Images/Basic Capture.png)
 
 There are also modifiers that you can add to the end of expressions, such as “i”, which allows you to recognize any case:
 
-![Case Capture Image](/Users/flatironschool/Development/code/blog/octopress/Regex_proj/Images/Capture Case.png)
+![Case Capture Image](../Images/Capture Case.png)
 
 You can also capture ranges of characters, with the following syntax:
 
-![All the Letters!](/Users/flatironschool/Development/code/blog/octopress/Regex_proj/Images/range of letters.png)
+![All the Letters!](../Images/range of letters.png)
 
 What you surround your capture group with matters as well. If you surround it with [brackets] it will match any character in the group. However, if you surround it with (parenthesis) it will only match the full word!
 
-![Brackets](/Users/flatironschool/Development/code/blog/octopress/Regex_proj/Images/brackets.png) ![Parenthesis](/Users/flatironschool/Development/code/blog/octopress/Regex_proj/Images/Parenthesis.png)
+![Brackets](../Images/brackets.png) ![Parenthesis](../Images/Parenthesis.png)
 
 Beyond basic characters, you can also match punctuation and white space:
 
-![Periods](/Users/flatironschool/Development/code/blog/octopress/Regex_proj/Images/All the periods.png)![Whitespace](/Users/flatironschool/Development/code/blog/octopress/Regex_proj/Images/White Space.png)
+![Periods](../Images/All the periods.png)![Whitespace](../Images/White Space.png)
 
 These kinds of expressions are excellent for splitting up strings. The following piece of code does a decent job of splitting up strings by sentences. See if you can decipher the regex!
 
-```string.split(/[.!?]/)```
+`string.split(/[.!?]/)`
 
 ###Quantifiers and Specials
 Each of these individual expressions we’ve created are called “capture groups”. Unless otherwise specified - most expressions will capture when they’ve met their first match to their capture group.
 
 If we look back at our expression to split strings, it works pretty well, but fails if we have two periods in a row:
 
-```string = "This. should. split well... but it doesnt!!".split(/[.!?]/)  # => ["This", " should", " split", "", " but it doesnt"]```
+`string = "This. should. split well... but it doesnt!!".split(/[.!?]/)  # => ["This", " should", " split", "", " but it doesnt"]`
 
 The reason is because the capture group is matching each occurrence of the expression. We can fix this with the + quantifier. The + quantifier can be appended to a capture group to make it match 1 or more occurrences of the expression. This will chain all occurrences of the capture group that occur side by side into one capture. So we can fix our code like this:
 
-```"This. should. split well... and it does!!!".split(/[.!?]+/)  # => ["This", " should", " split well", " and it does"]```
+`"This. should. split well... and it does!!!".split(/[.!?]+/)  # => ["This", " should", " split well", " and it does"]`
 
 The plus quantifier can also be used to chain capture groups together:
 
-![Chaining the Plus](/Users/flatironschool/Development/code/blog/octopress/Regex_proj/Images/+ chain.png)
+![Chaining the Plus](../Images/plus chain.png)
 
 There are also some special characters that regex uses to look at more complex concepts, such as words vs. not-words.
 \w for words!
-![Words](/Users/flatironschool/Development/code/blog/octopress/Regex_proj/Images/Words.png)
+![Words](../Images/Words.png)
 
 and \W for the not words
-![Not Words](/Users/flatironschool/Development/code/blog/octopress/Regex_proj/Images/Not Words.png)
+![Not Words](../Images/Not Words.png)
 
 You can also do the same for digits with \d and \D
 
-![Digits](/Users/flatironschool/Development/code/blog/octopress/Regex_proj/Images/digits.png)![Not Digits](/Users/flatironschool/Development/code/blog/octopress/Regex_proj/Images/not digits.png)
+![Digits](../Images/digits.png)![Not Digits](../Images/not digits.png)
 
 One more modifier that I think is really good to go over is the ?, which is a bit of a toughie. It is called the optional modifier. What it means is capture 0 or 1 of the preceding token. Here it is in action:
 
-![? optional quantifier](/Users/flatironschool/Development/code/blog/octopress/Regex_proj/Images/optional quantifier.png)
+![? optional quantifier](../Images/optional quantifier.png)
 
 However, ? can also mean lazy, which we’ll dive into below.
 
@@ -98,9 +98,9 @@ This is one of the tougher concepts to grasp in Regex, at least for me, so I’m
 the * quantifier is called the “greedy” quantifier. It will match as many of the preceding character as possible when matching an expression. This is best displayed below:
 
 Regular
-![Regular](/Users/flatironschool/Development/code/blog/octopress/Regex_proj/Images/Regular.png)
+![Regular](../Images/Regular.png)
 VS. Greedy
-![Greedy](/Users/flatironschool/Development/code/blog/octopress/Regex_proj/Images/Greedy.png)
+![Greedy](../Images/Greedy.png)
 
 
 Normally that expression would match anything with one character between two quotation marks. But because we placed a * quantifier, it matches as many characters as possible.
@@ -108,7 +108,7 @@ Normally that expression would match anything with one character between two quo
 
 if ? is used on another quantifier, it can be made to make the group “lazy” or match as few characters as possible to make the capture effective. This is a bit of a mental leap, so just look at it in action below.
 
-![Lazy](/Users/flatironschool/Development/code/blog/octopress/Regex_proj/Images/Lazy.png)
+![Lazy](../Images/Lazy.png)
 
 
 
