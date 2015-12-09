@@ -4,7 +4,7 @@
   <title><![CDATA[Ride or Pry]]></title>
   <link href="http://aemrox.github.io/atom.xml" rel="self"/>
   <link href="http://aemrox.github.io/"/>
-  <updated>2015-12-08T15:09:17-05:00</updated>
+  <updated>2015-12-09T10:26:04-05:00</updated>
   <id>http://aemrox.github.io/</id>
   <author>
     <name><![CDATA[Adam May]]></name>
@@ -18,11 +18,11 @@
     <link href="http://aemrox.github.io/blog/2015/12/08/the-wonderful-world-of-regex/"/>
     <updated>2015-12-08T13:52:56-05:00</updated>
     <id>http://aemrox.github.io/blog/2015/12/08/the-wonderful-world-of-regex</id>
-    <content type="html"><![CDATA[<p>While working on my last project, our main goal was solving one very difficult problem.</p>
+    <content type="html"><![CDATA[<p>While working on my last project, our main goal was solving one very difficult problem!!!!!!!!!!</p>
 
 <p>While ingesting around 1,000 articles a day, we needed to add some semblance of location data to each one of those articles. When we first launched, this was done by me. Manually. All. Goddamn. Day.</p>
 
-<p>I would manually scan the article for some kind of address, or area (like 5th ave between 42nd and 43rd). We noticed that I was following very similar patterns. Addresses are generally clean patterns, and areas often use the same prepositions over and over again. My partner figured that we could begin parsing these texts automatically with a series of rules.</p>
+<p>I would manually scan the article for some kind of address, or area (like 5th ave between 42nd and 43rd). We noticed that I was following very similar patterns - addresses are generally clean patterns, and areas often use the same prepositions over and over again. My partner figured that we could begin parsing these texts automatically with a series of rules.</p>
 
 <p>Since I was not any kind of developer at the time, I was less involved with the coding of the solution, but one way I was able to chip in was in writing the logic of finding these phrases through something called Regex.</p>
 
@@ -30,104 +30,110 @@
 
 <p>We would write regular expressions to begin automatically filtering and flagging the articles we were pulling in for items that didn’t fit what we were doing, like sponsored advertising:</p>
 
-<p><code>/((East|West)? ?([0-9]+|[A-Z][a-z]+|first|second|third|[a-z]+th)(st|th|nd|rd))/</code></p>
+<p><code>/sponsored/i</code></p>
 
 <p>But more importantly, we wrote a series of expressions that would look for the prepositions connecting areas, or the patterns of addresses. Here are some of the finished products:</p>
 
-<p><code>/sponsored/i</code></p>
+<p><code>\b([0-9]+ (West|W|East|E|North|N|South|S) [0-9]+(st|nd|rd|th))\b</code></p>
+
+<p><code>((East|West)? ?([0-9]+|[A-Z][a-z]+|first|second|third|[a-z]+th)(st|th|nd|rd)? ?(Road|road|rd|Rd|Street|street|St|st|Avenue|avenue|Ave|ave|Place|place|Pl|pl|Parkway|parkway|pk|Pkwy|pkwy|Drive|drive|Dr|dr|Boulevard|boulevard|Blvd|blvd|Way|way|Lane|lane|Ln|ln|Court|court|Plaza|plaza|Square|Terrace|terrace)) +(near|and|at) +(Avenue [A-Z])\b</code></p>
 
 <p>But let’s not get ahead of ourselves. Let’s start with the basics of Regex.</p>
 
 <h3>How it works</h3>
 
-<p>At its most basic, regex is just writing expressions that try to match combinations of characters. Every string can be broken down into characters, so if why wouldn’t we be able to codify some kind of logic that allows us to build up every combination we see in the real world. That’s what the regex engine does.
-Ruby recognizes regular expressions when you offset them by two backslashes, or with %r()</p>
+<p>At its most basic, regex is just writing expressions that try to match combinations of characters. Every string can be broken down into characters, so we should be able to codify some kind of logic that allows us to build up every combination we see in the real world. That’s what the regex engine does.</p>
+
+<p>Ruby recognizes regular expressions when you offset them by two backslashes, or with %r()</p>
 
 <p><code>/this is a regex expression/  
 %r(and this is to!)</code></p>
 
-<p>Let’s look at some of the basic rules:</p>
+<p>and these expressions can be entered in String.#methods such as #Scan or #Split</p>
 
-<p>regex recognizes all of our basic characters, so if you were to just type in a word it would match:</p>
+<h2>Basic Rules</h2>
 
-<p><img src="https://github.com/Aemrox/aemrox.github.io/blob/master/images/Basic%20Capture.png" alt="Basic Capture Image" /></p>
+<p>Regex recognizes all of our basic characters, so if you were to just type in a word it would match:</p>
+
+<p><img src="https://github.com/Aemrox/aemrox.github.io/blob/source/source/images/Basic%20Match.png?raw=true" alt="Basic Match Image" /></p>
 
 <p>There are also modifiers that you can add to the end of expressions, such as “i”, which allows you to recognize any case:</p>
 
-<p><img src="https://github.com/Aemrox/aemrox.github.io/blob/master/images/Capture%20Case.png" alt="Case Capture Image" /></p>
+<p>![Case Capture Image]<a href="https://github.com/Aemrox/aemrox.github.io/blob/source/source/images/Case%20Match.png?raw=true">https://github.com/Aemrox/aemrox.github.io/blob/source/source/images/Case%20Match.png?raw=true</a></p>
 
-<p>You can also capture ranges of characters, with the following syntax:</p>
+<p>You can also capture ranges of characters. Capture any lower case character with the following syntax:</p>
 
-<p><img src="https://raw.githubusercontent.com/Aemrox/aemrox.github.io/master/images/All%20the%20periods.png" alt="All the Letters!" /></p>
+<p><img src="https://github.com/Aemrox/aemrox.github.io/blob/source/source/images/Range%20Match.png?raw=true" alt="match all lower case letters" /></p>
 
-<p>What you surround your capture group with matters as well. If you surround it with [brackets] it will match any character in the group. However, if you surround it with (parenthesis) it will only match the full word!</p>
+<p>the little g modifier at the ends means it is global, and will match every instance across the string. If we were to remove it, it would only match the first instance.</p>
 
-<p><img src="../Images/brackets.png" alt="Brackets" /> <img src="../Images/Parenthesis.png" alt="Parenthesis" /></p>
+<p>Beyond basic characters, you can also match punctuation and white space by using escape characters:</p>
 
-<p>Beyond basic characters, you can also match punctuation and white space:</p>
+<p><img src="https://github.com/Aemrox/aemrox.github.io/blob/source/source/images/Periods.png?raw=true" alt="periods" />
+<img src="https://github.com/Aemrox/aemrox.github.io/blob/source/source/images/White%20Space.png?raw=true" alt="whitesspace" /></p>
 
-<p><img src="../Images/All%20the%20periods.png" alt="Periods" /><img src="../Images/White%20Space.png" alt="Whitespace" /></p>
+<p>The reason for needing the escape character is that there are special characters which denote larger sets, such as the “.” which matches any character</p>
 
-<p>These kinds of expressions are excellent for splitting up strings. The following piece of code does a decent job of splitting up strings by sentences. See if you can decipher the regex!</p>
+<p><img src="https://github.com/Aemrox/aemrox.github.io/blob/source/source/images/Dot.png?raw=true" alt="Dot" /></p>
 
-<p><code>string.split(/[.!?]/)</code></p>
+<p>There are also some special characters that regex uses to look at more complex concepts, such as words characters
+\w for words!
+<img src="https://github.com/Aemrox/aemrox.github.io/blob/source/source/images/word%20characters.png?raw=true" alt="words characters" /></p>
 
-<h3>Quantifiers and Specials</h3>
+<p>You can also do the same for digits with \d</p>
 
-<p>Each of these individual expressions we’ve created are called “capture groups”. Unless otherwise specified - most expressions will capture when they’ve met their first match to their capture group.</p>
+<p><img src="https://github.com/Aemrox/aemrox.github.io/blob/source/source/images/digits.png?raw=true" alt="digits" /></p>
+
+<h2>Quantifiers</h2>
+
+<p>Unless otherwise specified - most capture groups will capture each instance of a match as an individual capture. However, we can use several quantifiers to modify how capture groups behave and give them more (or less) flexibility</p>
 
 <p>If we look back at our expression to split strings, it works pretty well, but fails if we have two periods in a row:</p>
 
 <p><code>string = "This. should. split well... but it doesnt!!".split(/[.!?]/)  # =&gt; ["This", " should", " split", "", " but it doesnt"]</code></p>
 
-<p>The reason is because the capture group is matching each occurrence of the expression. We can fix this with the + quantifier. The + quantifier can be appended to a capture group to make it match 1 or more occurrences of the expression. This will chain all occurrences of the capture group that occur side by side into one capture. So we can fix our code like this:</p>
+<p>This doesn’t do exactly what we want because the capture group is matching each occurrence of the expression. We can fix this with the + quantifier. The + quantifier can be appended to a capture group to make it match 1 or more occurrences of the expression. This will chain all occurrences of the capture group that occur side by side into one capture. So we can fix our code like this:</p>
 
 <p><code>"This. should. split well... and it does!!!".split(/[.!?]+/)  # =&gt; ["This", " should", " split well", " and it does"]</code></p>
 
-<p>The plus quantifier can also be used to chain capture groups together:</p>
+<p>Another excellent modifier is the * or splat. When placed inside a capture group, it takes the preceeding token, and tells regex to match as many of these as possible.</p>
 
-<p><img src="../Images/plus%20chain.png" alt="Chaining the Plus" /></p>
+<p><img src="https://github.com/Aemrox/aemrox.github.io/blob/source/source/images/Splat.png?raw=true" alt="Splat" /></p>
 
-<p>There are also some special characters that regex uses to look at more complex concepts, such as words vs. not-words.
-\w for words!
-<img src="../Images/Words.png" alt="Words" /></p>
+<p>One more modifier that I think is really good to go over is the ?. It is called the optional modifier. What it means is capture 0 or 1 of the preceding token. Here it is in action:</p>
 
-<p>and \W for the not words
-<img src="../Images/Not%20Words.png" alt="Not Words" /></p>
-
-<p>You can also do the same for digits with \d and \D</p>
-
-<p><img src="../Images/digits.png" alt="Digits" /><img src="../Images/not%20digits.png" alt="Not Digits" /></p>
-
-<p>One more modifier that I think is really good to go over is the ?, which is a bit of a toughie. It is called the optional modifier. What it means is capture 0 or 1 of the preceding token. Here it is in action:</p>
-
-<p><img src="../Images/optional%20quantifier.png" alt="? optional quantifier" /></p>
+<p><img src="https://github.com/Aemrox/aemrox.github.io/blob/source/source/images/Optional%20Modifier.png?raw=true" alt="optional modifier" /></p>
 
 <p>However, ? can also mean lazy, which we’ll dive into below.</p>
 
-<h3>Greedy Vs. Lazy</h3>
+<h2>Greedy Vs. Lazy</h2>
 
 <p>This is one of the tougher concepts to grasp in Regex, at least for me, so I’m going to do my best to explain it.</p>
 
-<p>the * quantifier is called the “greedy” quantifier. It will match as many of the preceding character as possible when matching an expression. This is best displayed below:</p>
+<p>the * quantifier is called the “greedy” quantifier. It will take as many characters as necessary to create a capture group. To understand this, look at the following string.</p>
 
-<p>Regular
-<img src="../Images/Regular.png" alt="Regular" />
-VS. Greedy
-<img src="../Images/Greedy.png" alt="Greedy" /></p>
+<p>“You are becoming quite skilled, young grasshopper,” said Steven with glowing admiration in his eyes. “quite skilled indeed.”</p>
 
-<p>Normally that expression would match anything with one character between two quotation marks. But because we placed a * quantifier, it matches as many characters as possible.</p>
+<p>If I wanted a regex expression to match “anything between the quotes” - it actually has several groups it could capture. It could do both traditional quotes (as we see them), it could take the inverse, which is the area between the 2nd and 3rd quotation mark, or it could take the whole sentence.</p>
+
+<p>So a * tells regex, take as many characters as possible, or, be greedy.</p>
+
+<p>This is best displayed below:</p>
+
+<p><img src="https://github.com/Aemrox/aemrox.github.io/blob/source/source/images/Greedy.png?raw=true" alt="greedy" /></p>
+
+<p>This doesn’t get us all the text in quotations as we see them. B ecause we placed a * quantifier, it matches as many characters as possible.</p>
 
 <p>if ? is used on another quantifier, it can be made to make the group “lazy” or match as few characters as possible to make the capture effective. This is a bit of a mental leap, so just look at it in action below.</p>
 
-<p><img src="../Images/Lazy.png" alt="Lazy" /></p>
+<p><img src="https://github.com/Aemrox/aemrox.github.io/blob/source/source/images/Lazy.png?raw=true" alt="lazy" /></p>
 
 <p>There are a ton of amazing things regex can do, way too much to go over in one blog post. But hopefully this gives you guys a good start, and if this sparked your interest, keep reading for a few great resources to learn more on your own!</p>
 
-<p><a href="http://regexr.com/">Regexer</a> - how I did some of the images</p>
+<p><a href="http://regexr.com/">http://regexr.com/</a> - how I did some of the images</p>
 
-<p><a href="http://regexone.com/">Regex One</a> - a great tutorial that Kaylee found! Thanks Kaylee.
-<a href="http://www.rexegg.com/">RexEgg</a> - for those of you looking to master the whole thing and see how far down the rabbit whole you can go.</p>
+<p><a href="http://regexone.com/">http://regexone.com/</a> - a great tutorial that Kaylee found! Thanks Kaylee.
+<a href="http://www.rexegg.com/">http://www.rexegg.com/</a> - for those of you looking to master the whole thing and see how far down the rabbit whole you can go.</p>
 ]]></content>
   </entry>
   
