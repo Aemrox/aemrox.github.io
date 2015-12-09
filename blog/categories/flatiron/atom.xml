@@ -4,7 +4,7 @@
   <title><![CDATA[Category: Flatiron | Ride or Pry]]></title>
   <link href="http://aemrox.github.io/blog/categories/flatiron/atom.xml" rel="self"/>
   <link href="http://aemrox.github.io/"/>
-  <updated>2015-12-09T10:34:27-05:00</updated>
+  <updated>2015-12-09T13:22:38-05:00</updated>
   <id>http://aemrox.github.io/</id>
   <author>
     <name><![CDATA[Adam May]]></name>
@@ -18,7 +18,7 @@
     <link href="http://aemrox.github.io/blog/2015/12/08/the-wonderful-world-of-regex/"/>
     <updated>2015-12-08T13:52:56-05:00</updated>
     <id>http://aemrox.github.io/blog/2015/12/08/the-wonderful-world-of-regex</id>
-    <content type="html"><![CDATA[<p>While working on my last project, our main goal was solving one very difficult problem!!!!!!!!!!</p>
+    <content type="html"><![CDATA[<p>While working on my last project, our main goal was solving one very difficult problem.</p>
 
 <p>While ingesting around 1,000 articles a day, we needed to add some semblance of location data to each one of those articles. When we first launched, this was done by me. Manually. All. Goddamn. Day.</p>
 
@@ -83,6 +83,24 @@
 <p>You can also do the same for digits with \d</p>
 
 <p><img src="https://github.com/Aemrox/aemrox.github.io/blob/source/source/images/digits.png?raw=true" alt="digits" /></p>
+
+<h2>Capture Groups</h2>
+
+<p>Everything we have been doing so far has been restricted to matching a single phrase. However, regex has a lot more potential than just that. You can instruct an expression to group certain matches, or even break down a phrase by using what are called capture groups.</p>
+
+<p>These are particularly useful when using a string method like #scan, which utlizes these groups and places them as separate entries in an array.</p>
+
+<p>You create a group by placing a parenthessis around what you are looking to capture. a parenthesis captures only an entire phrase.</p>
+
+<p><img src="https://cdn-images-1.medium.com/max/800/1*AdPVsSKG1taPW7zJgRoFrA.png" alt="Basic Capture Group" /></p>
+
+<p>However, you can also define a capture group with brackets, which will match any character in the group.</p>
+
+<p><img src="https://cdn-images-1.medium.com/max/800/1*oAPvBLzWAHs80PoPF5gs1A.png" alt="Capture using Brackets" /></p>
+
+<p>These kinds of expressions are excellent for splitting up strings. The following piece of code does a decent job of splitting up strings by sentences. See if you can decipher the regex!</p>
+
+<p><code>“Check out my sentence! Here’s another. And another?”.split(/[.!?]/)</code></p>
 
 <h2>Quantifiers</h2>
 
