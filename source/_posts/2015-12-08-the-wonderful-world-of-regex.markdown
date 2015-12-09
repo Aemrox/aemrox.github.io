@@ -6,7 +6,7 @@ comments: true
 categories: "Flatiron School"
 ---
 
-While working on my last project, our main goal was solving one very difficult problem.
+While working on my last project, our main goal was solving one very difficult problem!!!!!!!!!!
 
 While ingesting around 1,000 articles a day, we needed to add some semblance of location data to each one of those articles. When we first launched, this was done by me. Manually. All. Goddamn. Day.
 
