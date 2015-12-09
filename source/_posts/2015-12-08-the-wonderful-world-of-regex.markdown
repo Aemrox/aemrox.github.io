@@ -45,33 +45,34 @@ and these expressions can be entered in String.#methods such as #Scan or #Split
 
 Regex recognizes all of our basic characters, so if you were to just type in a word it would match:
 
-[Basic Capture Image]
+![Basic Match Image](https://github.com/Aemrox/aemrox.github.io/blob/source/source/images/Basic%20Match.png?raw=true)
 
 There are also modifiers that you can add to the end of expressions, such as “i”, which allows you to recognize any case:
 
-[Case Capture Image]
+![Case Capture Image]https://github.com/Aemrox/aemrox.github.io/blob/source/source/images/Case%20Match.png?raw=true
 
 You can also capture ranges of characters. Capture any lower case character with the following syntax:
 
-[all the letters]
+![match all lower case letters](https://github.com/Aemrox/aemrox.github.io/blob/source/source/images/Range%20Match.png?raw=true)
 
 the little g modifier at the ends means it is global, and will match every instance across the string. If we were to remove it, it would only match the first instance.
 
 Beyond basic characters, you can also match punctuation and white space by using escape characters:
 
-[periods][whitesspace]
+![periods](https://github.com/Aemrox/aemrox.github.io/blob/source/source/images/Periods.png?raw=true)
+![whitesspace](https://github.com/Aemrox/aemrox.github.io/blob/source/source/images/White%20Space.png?raw=true)
 
 The reason for needing the escape character is that there are special characters which denote larger sets, such as the “.” which matches any character
 
-/./
+![Dot](https://github.com/Aemrox/aemrox.github.io/blob/source/source/images/Dot.png?raw=true)
 
 There are also some special characters that regex uses to look at more complex concepts, such as words characters
 \w for words!
-[words]
+![words characters](https://github.com/Aemrox/aemrox.github.io/blob/source/source/images/word%20characters.png?raw=true)
 
 You can also do the same for digits with \d
 
-[digits]
+![digits](https://github.com/Aemrox/aemrox.github.io/blob/source/source/images/digits.png?raw=true)
 
 
 ##Quantifiers
@@ -87,11 +88,11 @@ This doesn’t do exactly what we want because the capture group is matching eac
 
 Another excellent modifier is the * or splat. When placed inside a capture group, it takes the preceeding token, and tells regex to match as many of these as possible.
 
-[Splat]
+![Splat](https://github.com/Aemrox/aemrox.github.io/blob/source/source/images/Splat.png?raw=true)
 
 One more modifier that I think is really good to go over is the ?. It is called the optional modifier. What it means is capture 0 or 1 of the preceding token. Here it is in action:
 
-[? optional]
+![optional modifier](https://github.com/Aemrox/aemrox.github.io/blob/source/source/images/Optional%20Modifier.png?raw=true)
 
 However, ? can also mean lazy, which we’ll dive into below.
 
@@ -108,15 +109,14 @@ So a * tells regex, take as many characters as possible, or, be greedy.
 
 This is best displayed below:
 
-[greedy]
+![greedy](https://github.com/Aemrox/aemrox.github.io/blob/source/source/images/Greedy.png?raw=true)
 
 This doesn’t get us all the text in quotations as we see them. B ecause we placed a * quantifier, it matches as many characters as possible.
 
 if ? is used on another quantifier, it can be made to make the group “lazy” or match as few characters as possible to make the capture effective. This is a bit of a mental leap, so just look at it in action below.
 
-[lazy]
+![lazy](https://github.com/Aemrox/aemrox.github.io/blob/source/source/images/Lazy.png?raw=true)
 
-r
 There are a ton of amazing things regex can do, way too much to go over in one blog post. But hopefully this gives you guys a good start, and if this sparked your interest, keep reading for a few great resources to learn more on your own!
 
 http://regexr.com/ - how I did some of the images
