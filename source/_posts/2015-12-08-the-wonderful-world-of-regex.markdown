@@ -6,7 +6,7 @@ comments: true
 categories: "Flatiron School"
 ---
 
-While working on my last project, our main goal was solving one very difficult problem!!!!!!!!!!
+While working on my last project, our main goal was solving one very difficult problem.
 
 While ingesting around 1,000 articles a day, we needed to add some semblance of location data to each one of those articles. When we first launched, this was done by me. Manually. All. Goddamn. Day.
 
@@ -73,6 +73,23 @@ There are also some special characters that regex uses to look at more complex c
 You can also do the same for digits with \d
 
 ![digits](https://github.com/Aemrox/aemrox.github.io/blob/source/source/images/digits.png?raw=true)
+
+##Capture Groups
+Everything we have been doing so far has been restricted to matching a single phrase. However, regex has a lot more potential than just that. You can instruct an expression to group certain matches, or even break down a phrase by using what are called capture groups.
+
+These are particularly useful when using a string method like #scan, which utlizes these groups and places them as separate entries in an array.
+
+You create a group by placing a parenthessis around what you are looking to capture. a parenthesis captures only an entire phrase.
+
+![Basic Capture Group](https://cdn-images-1.medium.com/max/800/1*AdPVsSKG1taPW7zJgRoFrA.png)
+
+However, you can also define a capture group with brackets, which will match any character in the group.
+
+![Capture using Brackets](https://cdn-images-1.medium.com/max/800/1*oAPvBLzWAHs80PoPF5gs1A.png)
+
+These kinds of expressions are excellent for splitting up strings. The following piece of code does a decent job of splitting up strings by sentences. See if you can decipher the regex!
+
+`“Check out my sentence! Here’s another. And another?”.split(/[.!?]/)`
 
 
 ##Quantifiers
