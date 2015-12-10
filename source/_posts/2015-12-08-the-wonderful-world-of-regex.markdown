@@ -137,7 +137,11 @@ if ? is used on another quantifier, it can be made to make the group “lazy” 
 There are a ton of amazing things regex can do, way too much to go over in one blog post. But hopefully this gives you guys a good start, and if this sparked your interest, keep reading for a few great resources to learn more on your own!
 
 http://regexr.com/ - how I did some of the images
+
 http://rubular.com/ - the right tool to use to build regex for Ruby, uses the same engine.
+
 http://regexone.com/ - a great tutorial that Kaylee found! Thanks Kaylee.
+
 https://regex101.com/ - from Derek. Thanks Derek...
+
 http://www.rexegg.com/ - for those of you looking to master the whole thing and see how far down the rabbit whole you can go.
