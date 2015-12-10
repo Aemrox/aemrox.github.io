@@ -85,7 +85,7 @@ You create a group by placing a parenthessis around what you are looking to capt
 
 However, you can also define a capture group with brackets, which will match any character in the group.
 
-![Capture using Brackets](https://cdn-images-1.medium.com/max/800/1*oAPvBLzWAHs80PoPF5gs1A.png)
+![Capture using Brackets](https://raw.githubusercontent.com/Aemrox/aemrox.github.io/master/images/Case%20Match.png)
 
 These kinds of expressions are excellent for splitting up strings. The following piece of code does a decent job of splitting up strings by sentences. See if you can decipher the regex!
 
@@ -137,6 +137,7 @@ if ? is used on another quantifier, it can be made to make the group “lazy” 
 There are a ton of amazing things regex can do, way too much to go over in one blog post. But hopefully this gives you guys a good start, and if this sparked your interest, keep reading for a few great resources to learn more on your own!
 
 http://regexr.com/ - how I did some of the images
-
+http://rubular.com/ - the right tool to use to build regex for Ruby, uses the same engine.
 http://regexone.com/ - a great tutorial that Kaylee found! Thanks Kaylee.
+https://regex101.com/ - from Derek. Thanks Derek...
 http://www.rexegg.com/ - for those of you looking to master the whole thing and see how far down the rabbit whole you can go.
