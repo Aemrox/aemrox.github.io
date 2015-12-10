@@ -4,7 +4,7 @@
   <title><![CDATA[Category: Flatiron | Ride or Pry]]></title>
   <link href="http://aemrox.github.io/blog/categories/flatiron/atom.xml" rel="self"/>
   <link href="http://aemrox.github.io/"/>
-  <updated>2015-12-09T13:22:38-05:00</updated>
+  <updated>2015-12-10T10:32:46-05:00</updated>
   <id>http://aemrox.github.io/</id>
   <author>
     <name><![CDATA[Adam May]]></name>
@@ -96,7 +96,7 @@
 
 <p>However, you can also define a capture group with brackets, which will match any character in the group.</p>
 
-<p><img src="https://cdn-images-1.medium.com/max/800/1*oAPvBLzWAHs80PoPF5gs1A.png" alt="Capture using Brackets" /></p>
+<p><img src="https://raw.githubusercontent.com/Aemrox/aemrox.github.io/master/images/Case%20Match.png" alt="Capture using Brackets" /></p>
 
 <p>These kinds of expressions are excellent for splitting up strings. The following piece of code does a decent job of splitting up strings by sentences. See if you can decipher the regex!</p>
 
@@ -148,9 +148,10 @@
 
 <p>There are a ton of amazing things regex can do, way too much to go over in one blog post. But hopefully this gives you guys a good start, and if this sparked your interest, keep reading for a few great resources to learn more on your own!</p>
 
-<p><a href="http://regexr.com/">http://regexr.com/</a> - how I did some of the images</p>
-
-<p><a href="http://regexone.com/">http://regexone.com/</a> - a great tutorial that Kaylee found! Thanks Kaylee.
+<p><a href="http://regexr.com/">http://regexr.com/</a> - how I did some of the images
+<a href="http://rubular.com/">http://rubular.com/</a> - the right tool to use to build regex for Ruby, uses the same engine.
+<a href="http://regexone.com/">http://regexone.com/</a> - a great tutorial that Kaylee found! Thanks Kaylee.
+<a href="https://regex101.com/">https://regex101.com/</a> - from Derek. Thanks Derek&hellip;
 <a href="http://www.rexegg.com/">http://www.rexegg.com/</a> - for those of you looking to master the whole thing and see how far down the rabbit whole you can go.</p>
 ]]></content>
   </entry>
