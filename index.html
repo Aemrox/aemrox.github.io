@@ -307,7 +307,7 @@
 <li>Postgres is a lot stricter on the &lsquo;foreign key&rsquo; constraint. If you write your migrations with belongs_to relationships, and define foreign keys, make sure that the table already exists in a previous migration. Sqlite3 will let that shit slide, but postgres is a lot less forgiving.</li>
 <li>Pry doesn&rsquo;t work in your production environment! If you&rsquo;re code is broken it is much harder to fix once in a production environment. SO - tip 1 is make sure your code is working before you deploy it.</li>
 <li>So Pry doesn&rsquo;t work, but you can still do some spot debugging by writing some rake tasks. For instance, if I want to see what&rsquo;s going on in my environment db, I can write some rake tasks to display the contents of a few of my models.</li>
-<li>Rake tasks are and awesome way to interact with your code in general once it&rsquo;s in environment, having some tasks is a great way to do some maintenancy things, like clearing your db, or resetting a user, etc.</li>
+<li>Rake tasks are an awesome way to interact with your code in general once it&rsquo;s in environment, having some tasks is a great way to do some maintenancy things, like clearing your db, or resetting a user, etc.</li>
 </ol>
 
 
