@@ -166,6 +166,8 @@
 <span class='line-number'>15</span>
 <span class='line-number'>16</span>
 <span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
 </pre></td><td class='code'><pre><code class='yaml'><span class='line'><span class="l-Scalar-Plain">default</span><span class="p-Indicator">:</span> <span class="nl">&amp;default</span>
 </span><span class='line'>  <span class="l-Scalar-Plain">adapter</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">postgresql</span>
 </span><span class='line'>  <span class="l-Scalar-Plain">pool</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">5</span>
@@ -175,6 +177,8 @@
 </span><span class='line'>
 </span><span class='line'><span class="l-Scalar-Plain">development</span><span class="p-Indicator">:</span>
 </span><span class='line'>  <span class="l-Scalar-Plain">&lt;&lt;</span><span class="p-Indicator">:</span> <span class="nv">*default</span>
+</span><span class='line'>  <span class="l-Scalar-Plain">username</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">&lt;%= ENV[&#39;PG_USER&#39;] %&gt;</span>
+</span><span class='line'>  <span class="l-Scalar-Plain">password</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">&lt;%= ENV[&#39;PG_PASS&#39;] %&gt;</span>
 </span><span class='line'>  <span class="l-Scalar-Plain">database</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">db/my_db_development</span>
 </span><span class='line'>
 </span><span class='line'><span class="l-Scalar-Plain">test</span><span class="p-Indicator">:</span>
@@ -186,7 +190,14 @@
 </span></code></pre></td></tr></table></div></figure>
 
 
-<p>The last line in this file is important for working with Heroku. Heroku will give your app an ENV (short for environment) hash with some data. In that hash is the database url, and will be essential for connecting the instance of a postgres db that heroku provides with your app.</p>
+<p>Two notes, the PG_USER and PG_PASS are environment variables that need to be set in your bash profile, thusly:</p>
+
+<p><code>export PG_USER = 'flatiron'</code>
+<code>'export PG_PASS = 'learnlovecode'</code></p>
+
+<p>You know, for safety reasons.</p>
+
+<p>Second, the last line in this file is important for working with Heroku. Heroku will give your app an ENV (short for environment) hash with some data. In that hash is the database url, and will be essential for connecting the instance of a postgres db that heroku provides with your app.</p>
 
 <p>Next we move on to making the connection with active record. In your config/environment file, you will have to do some extra work to connect to postgres and make it compliant with Heroku. I took this piece of code from a <a href="http://mherman.org/blog/2013/06/08/designing-with-class-sinatra-plus-postgresql-plus-heroku/#.VonyepMrJE5">great guide for getting Sinatra to work with Postgres and Heroku</a>, so credit where credit is due.</p>
 
@@ -201,7 +212,7 @@
 <span class='line-number'>9</span>
 <span class='line-number'>10</span>
 <span class='line-number'>11</span>
-</pre></td><td class='code'><pre><code class='Ruby'><span class='line'><span class="n">db</span> <span class="o">=</span>  <span class="no">URI</span><span class="o">.</span><span class="n">parse</span><span class="p">(</span><span class="no">ENV</span><span class="o">[</span><span class="s1">&#39;DATABASE_URL&#39;</span><span class="o">]</span><span class="p">)</span> <span class="o">||</span> <span class="s1">&#39;postgres://user:pass@localhost/db/my_db_development&#39;</span>
+</pre></td><td class='code'><pre><code class='Ruby'><span class='line'><span class="n">db</span> <span class="o">=</span>  <span class="no">URI</span><span class="o">.</span><span class="n">parse</span><span class="p">(</span><span class="no">ENV</span><span class="o">[</span><span class="s1">&#39;DATABASE_URL&#39;</span><span class="o">]</span> <span class="o">||</span> <span class="s1">&#39;postgres://localhost/db/my_db_development&#39;</span><span class="p">)</span>
 </span><span class='line'>
 </span><span class='line'><span class="no">ActiveRecord</span><span class="o">::</span><span class="no">Base</span><span class="o">.</span><span class="n">establish_connection</span><span class="p">(</span>
 </span><span class='line'>  <span class="ss">:adapter</span>  <span class="o">=&gt;</span> <span class="n">db</span><span class="o">.</span><span class="n">scheme</span> <span class="o">==</span> <span class="s1">&#39;postgres&#39;</span> <span class="p">?</span> <span class="s1">&#39;postgresql&#39;</span> <span class="p">:</span> <span class="n">db</span><span class="o">.</span><span class="n">scheme</span><span class="p">,</span>

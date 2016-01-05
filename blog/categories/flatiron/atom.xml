@@ -4,7 +4,7 @@
   <title><![CDATA[Category: Flatiron | Ride or Pry]]></title>
   <link href="http://aemrox.github.io/blog/categories/flatiron/atom.xml" rel="self"/>
   <link href="http://aemrox.github.io/"/>
-  <updated>2016-01-05T01:15:49-05:00</updated>
+  <updated>2016-01-05T10:02:07-05:00</updated>
   <id>http://aemrox.github.io/</id>
   <author>
     <name><![CDATA[Adam May]]></name>
@@ -89,6 +89,8 @@
 
 development:
   &lt;&lt;: *default
+  username: &lt;%= ENV['PG_USER'] %&gt;
+  password: &lt;%= ENV['PG_PASS'] %&gt;
   database: db/my_db_development
 
 test:
@@ -99,11 +101,18 @@ production:
   url: &lt;%= ENV["DATABASE_URL"] %&gt;
 </code></pre>
 
-<p>The last line in this file is important for working with Heroku. Heroku will give your app an ENV (short for environment) hash with some data. In that hash is the database url, and will be essential for connecting the instance of a postgres db that heroku provides with your app.</p>
+<p>Two notes, the PG_USER and PG_PASS are environment variables that need to be set in your bash profile, thusly:</p>
+
+<p><code>export PG_USER = 'flatiron'</code>
+<code>'export PG_PASS = 'learnlovecode'</code></p>
+
+<p>You know, for safety reasons.</p>
+
+<p>Second, the last line in this file is important for working with Heroku. Heroku will give your app an ENV (short for environment) hash with some data. In that hash is the database url, and will be essential for connecting the instance of a postgres db that heroku provides with your app.</p>
 
 <p>Next we move on to making the connection with active record. In your config/environment file, you will have to do some extra work to connect to postgres and make it compliant with Heroku. I took this piece of code from a <a href="http://mherman.org/blog/2013/06/08/designing-with-class-sinatra-plus-postgresql-plus-heroku/#.VonyepMrJE5">great guide for getting Sinatra to work with Postgres and Heroku</a>, so credit where credit is due.</p>
 
-<pre><code class="Ruby">db =  URI.parse(ENV['DATABASE_URL']) || 'postgres://user:pass@localhost/db/my_db_development'
+<pre><code class="Ruby">db =  URI.parse(ENV['DATABASE_URL'] || 'postgres://localhost/db/my_db_development')
 
 ActiveRecord::Base.establish_connection(
   :adapter  =&gt; db.scheme == 'postgres' ? 'postgresql' : db.scheme,
