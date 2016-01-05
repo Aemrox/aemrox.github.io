@@ -1,6 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.sitemaps.org/schemas/sitemap/0.9 http://www.sitemaps.org/schemas/sitemap/0.9/sitemap.xsd" xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
+    <loc>http://aemrox.github.io/blog/2016/01/04/deploying-to-heroku/</loc>
+    <lastmod>2016-01-04T13:27:07-05:00</lastmod>
+  </url>
+  <url>
     <loc>http://aemrox.github.io/blog/2015/12/08/the-wonderful-world-of-regex/</loc>
     <lastmod>2015-12-08T13:52:56-05:00</lastmod>
   </url>

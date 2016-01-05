@@ -4,7 +4,7 @@
   <title><![CDATA[Category: Flatiron | Ride or Pry]]></title>
   <link href="http://aemrox.github.io/blog/categories/flatiron/atom.xml" rel="self"/>
   <link href="http://aemrox.github.io/"/>
-  <updated>2015-12-10T10:35:55-05:00</updated>
+  <updated>2016-01-05T00:51:00-05:00</updated>
   <id>http://aemrox.github.io/</id>
   <author>
     <name><![CDATA[Adam May]]></name>
@@ -12,6 +12,131 @@
   </author>
   <generator uri="http://octopress.org/">Octopress</generator>
 
+  
+  <entry>
+    <title type="html"><![CDATA[Deploying to Heroku, or How I Learned to Stop Worrying and Love Postgres]]></title>
+    <link href="http://aemrox.github.io/blog/2016/01/04/deploying-to-heroku/"/>
+    <updated>2016-01-04T13:27:07-05:00</updated>
+    <id>http://aemrox.github.io/blog/2016/01/04/deploying-to-heroku</id>
+    <content type="html"><![CDATA[<p>Ahh, my first foray into placing something on the real webs. I hope that one day I look back on this as a fond learning experience, with much nostalgia on how much I had ahead of me. But to be real, the path to that day seems as fraught and horrible as my path to getting this goddamn site up. To keep it brief, I not only suffered, but tortured my dog with many violent outbursts of fervent cussing.</p>
+
+<p>Where to begin?</p>
+
+<p>Let&rsquo;s start with what Heroku is. The wikipedia definition is a cloud platform-as-a-service. In plain old english, it&rsquo;s a way to host and serve your code online. Heroku is lots of web servers (called dynos) which are capable of holding your code, running it, and serving it to people who want to use it. It supports lots of different languages and frameworks, and can even provide you with any nuts and bolts your app might need (like security or databases). Up to a certain point, it&rsquo;s free and a great way for us to deploy our websites in a professional, scalable manner.</p>
+
+<h2>Heroku&rsquo;s Documentation</h2>
+
+<p>In short, the documentation is good. They do a great job of explaining, in a couple simple steps, how to get a rails app up and running with little to no effort.</p>
+
+<p>Once you <a href="https://signup.heroku.com/signup/dc">sign up for a Heroku account</a> and download the <a href="https://devcenter.heroku.com/articles/getting-started-with-ruby#set-up">toolkit</a> you can upload an app with a few short command line requests:</p>
+
+<p><code>$ heroku login</code></p>
+
+<p>will bring up a field where you can enter the credentials for the account you created. Then, after navigating to repository of your app in your terminal, you can create a new app with the following command:</p>
+
+<p><code>$ heroku create my_awesome_app</code></p>
+
+<p>Now, all that&rsquo;s left to do is deploy your code. Luckily, heroku integrates seamlessly with git, so if you have a repository ready, you can push your entire codebase up with:</p>
+
+<p><code>$ git push heroku master</code></p>
+
+<p>If it seems to good to be true, that&rsquo;s because it is. The problem is, we are not using rails, we are using Sinatra - and on top of that, we&rsquo;re using the Tyrion Lanister of databases - sqlite3. It&rsquo;s totally functional, but it does not scale at all.</p>
+
+<p><img src="https://media4.giphy.com/media/Gqy93G8Ezezny/200.gif" alt="Tyrion" /></p>
+
+<h2>Development Vs. Production</h2>
+
+<p>Working with Sinatra and Heroku requires a lot of rejiggering. First off, you&rsquo;re going to need a few more gems, and you are going to need to start to really demarcate the difference between your Development and Production environments. Right now, we&rsquo;ve largely been working in what is considered Development environments.</p>
+
+<p>An environment is the tier to which your code is deployed, or in short, where your code &ldquo;lives&rdquo;. The definition of a development environment is pretty loose, but in general it is an environment where code can be changed freely. No thought has to be given to making changes in the development environment because it&rsquo;s usually isolated, or running on a single server or machine. In our case, our development environment is our computer.</p>
+
+<p>However, now that we are considering serving our web application to other people, and hosting in on heroku where it can be accessed by just about anyone, we have to rethink what our code is. It is no longer this malleable hunk of clay that we can change at will. It needs to be stable, and a lot of thought needs to go into how and when it is changed. Heroku is a production environment, one where the code and application is publicly accessible, or actively serving it&rsquo;s purpose.</p>
+
+<p>In big companies, there are generally steps in between Development and Production (such as testing, quality assurance and staging), but for now let&rsquo;s focus on these two. So what does this mean for us? It means we have to start thinking about what it means to push something up to production. It&rsquo;s time to get serious.</p>
+
+<p><img src="https://cf.geekdo-images.com/images/pic323510.jpg" alt="warning shot" /></p>
+
+<h2>Getting with the Postgres</h2>
+
+<p>According to heroku, SQLite3 is not a production-grade database. Their reasoning as sound, and can be <a href="https://devcenter.heroku.com/articles/sqlite3">read here</a> if you are interested.</p>
+
+<p>This means we are going to have to upgrade our databases. Full disclosure, as of right now, I haven&rsquo;t gotten this to work 100% yet.</p>
+
+<p>Postgres is fairly easy to get your hands on, it&rsquo;s open source and readily available. You might already have it installed.</p>
+
+<p>If you don&rsquo;t you can do so by typing in:</p>
+
+<p><code>brew install postgres</code></p>
+
+<p>You will also need to include the &lsquo;pg&rsquo; gem, which will act as your adapter between active record and postgres - much like our sqlite3 gem has done up until now.</p>
+
+<h2>Sinatra, you sweet, sweet lightweight fool</h2>
+
+<p>This is where Sinatra falls short of Rails. Rails takes care of a lot of the plumbing for you, but in Sinatra, we are going to have to do it ourselves.</p>
+
+<p>After including the &lsquo;pg&rsquo; gem in our gemfile, we are going to need to create a database.yml file in your config folder, right next to environment.rb.</p>
+
+<p><img src="http://i.imgur.com/TFZMqmw.png" alt="Database.yml in action" /></p>
+
+<p>Here is a sample yaml file that serves as a decent template.</p>
+
+<p>`default: &amp;default
+  adapter: postgresql
+  pool: 5
+  encoding: SQL_ASCII
+  timeout: 5000
+  port: 5432</p>
+
+<p>development:
+  &lt;&lt;: *default
+  database: db/my_db_development</p>
+
+<h1>Warning: The database defined as &ldquo;test&rdquo; will be erased and</h1>
+
+<h1>re-generated from your development database when you run &ldquo;rake&rdquo;.</h1>
+
+<h1>Do not set this db to the same as development or production.</h1>
+
+<p>test:
+  &lt;&lt;: *default
+  database: db/my_db_test</p>
+
+<p>production:
+  url: &lt;%= ENV[&ldquo;DATABASE_URL&rdquo;] %>`</p>
+
+<p>The last line in this file is important for working with Heroku. Heroku will give your app an ENV (short for environment) hash with some data. In that hash is the database url, and will be essential for connecting the instance of a postgres db that heroku provides with your app.</p>
+
+<p>Next we move on to making the connection with active record. In your config/environment file, you will have to do some extra work to connect to postgres and make it compliant with Heroku. I took this piece of code from a <a href="http://mherman.org/blog/2013/06/08/designing-with-class-sinatra-plus-postgresql-plus-heroku/#.VonyepMrJE5">great guide for getting Sinatra to work with Postgres and Heroku</a>, so credit where credit is due.</p>
+
+<p>`db =  URI.parse(ENV[&lsquo;DATABASE_URL&rsquo;]) || &lsquo;postgres://user:pass@localhost/db/my_db_development&rsquo;</p>
+
+<p>ActiveRecord::Base.establish_connection(
+  :adapter  => db.scheme == &lsquo;postgres&rsquo; ? &lsquo;postgresql&rsquo; : db.scheme,
+  :host     => db.host,
+  :username => db.user,
+  :password => db.password,
+  :database => db.path[1..-1],
+  :encoding => &lsquo;SQL_ASCII&rsquo;</p>
+
+<p>)`</p>
+
+<p>The first line of code sets the database connection. It first checks to see if it&rsquo;s being served with a url (which we received from Heroku and assigned in our database.yml file), otherwise it uses the database we set up in our yml file.</p>
+
+<h2>Full Disclosure</h2>
+
+<p>This is as far as I got. Seriously, as of writing this, my shit still doesn&rsquo;t work. However, that being said, I have one pitfall to avoid, and one or two hints to give you so you can avoid the cesspit I currently find myself in.</p>
+
+<ol>
+<li>Postgres is a lot stricter on the &lsquo;foreign key&rsquo; constraint. If you write your migrations with belongs_to relationships, and define foreign keys, make sure that the table already exists in a previous migration. Sqlite3 will let that shit slide, but postgres is a lot less forgiving.</li>
+<li>Pry doesn&rsquo;t work in your production environment! If you&rsquo;re code is broken it is much harder to fix once in a production environment. SO - tip 1 is make sure your code is working before you deploy it.</li>
+<li>So Pry doesn&rsquo;t work, but you can still do some spot debugging by writing some rake tasks. For instance, if I want to see what&rsquo;s going on in my environment db, I can write some rake tasks to display the contents of a few of my models.</li>
+<li>Rake tasks are and awesome way to interact with your code in general once it&rsquo;s in environment, having some tasks is a great way to do some maintenancy things, like clearing your db, or resetting a user, etc.</li>
+</ol>
+
+
+<p>That&rsquo;s all I got guys, hopefully, once you tune in next time this will be further down the road.</p>
+]]></content>
+  </entry>
   
   <entry>
     <title type="html"><![CDATA[The Wonderful World of Regex]]></title>
