@@ -4,7 +4,7 @@
   <title><![CDATA[Category: Flatiron | Ride or Pry]]></title>
   <link href="http://aemrox.github.io/blog/categories/flatiron/atom.xml" rel="self"/>
   <link href="http://aemrox.github.io/"/>
-  <updated>2016-01-05T10:02:07-05:00</updated>
+  <updated>2016-01-05T10:17:18-05:00</updated>
   <id>http://aemrox.github.io/</id>
   <author>
     <name><![CDATA[Adam May]]></name>
@@ -104,25 +104,62 @@ production:
 <p>Two notes, the PG_USER and PG_PASS are environment variables that need to be set in your bash profile, thusly:</p>
 
 <p><code>export PG_USER = 'flatiron'</code>
-<code>'export PG_PASS = 'learnlovecode'</code></p>
+<code>export PG_PASS = 'learnlovecode'</code></p>
 
 <p>You know, for safety reasons.</p>
 
 <p>Second, the last line in this file is important for working with Heroku. Heroku will give your app an ENV (short for environment) hash with some data. In that hash is the database url, and will be essential for connecting the instance of a postgres db that heroku provides with your app.</p>
 
+<p>Now we need to make sure that your gem file is divided into a development group, and includes the proper postgres gems:</p>
+
+<pre><code class="Ruby">source "https://rubygems.org"
+
+ruby '2.2.3'
+gem 'sinatra'
+gem 'activerecord'
+gem 'sinatra-activerecord'
+gem 'sinatra-flash'
+gem 'sinatra-redirect-with-flash'
+gem 'rake'
+
+#postgres!
+gem 'postgresql'
+gem 'pg'
+
+group :development do
+  gem 'sqlite3'
+    gem 'pry'
+    gem 'pry-nav'
+  gem 'rspec'
+    gem 'tux'
+end
+</code></pre>
+
 <p>Next we move on to making the connection with active record. In your config/environment file, you will have to do some extra work to connect to postgres and make it compliant with Heroku. I took this piece of code from a <a href="http://mherman.org/blog/2013/06/08/designing-with-class-sinatra-plus-postgresql-plus-heroku/#.VonyepMrJE5">great guide for getting Sinatra to work with Postgres and Heroku</a>, so credit where credit is due.</p>
 
-<pre><code class="Ruby">db =  URI.parse(ENV['DATABASE_URL'] || 'postgres://localhost/db/my_db_development')
+<pre><code class="Ruby">require 'bundler'
+Bundler.require(:default, :development, :production)
 
-ActiveRecord::Base.establish_connection(
-  :adapter  =&gt; db.scheme == 'postgres' ? 'postgresql' : db.scheme,
-  :host     =&gt; db.host,
-  :username =&gt; db.user,
-  :password =&gt; db.password,
-  :database =&gt; db.path[1..-1],
-  :encoding =&gt; 'SQL_ASCII'
+configure :production, :development do
+  db =  URI.parse(ENV['DATABASE_URL'] || 'postgres://localhost/db/topofthemorning_development')
+#  db =  'postgres://localhost/topofthemorning_development'
 
-)
+  ActiveRecord::Base.establish_connection(
+    :adapter  =&gt; db.scheme == 'postgres' ? 'postgresql' : db.scheme,
+    :host     =&gt; db.host,
+    :username =&gt; db.user,
+    :password =&gt; db.password,
+    :database =&gt; db.path[1..-1],
+    :encoding =&gt; 'SQL_ASCII'
+
+  )
+end
+
+require_relative '../app/controllers/application_controller.rb'
+require_all 'app/models'
+
+require "open-uri"
+require "json"
 </code></pre>
 
 <p>The first line of code sets the database connection. It first checks to see if it&rsquo;s being served with a url (which we received from Heroku and assigned in our database.yml file), otherwise it uses the database we set up in our yml file.</p>

@@ -193,11 +193,58 @@
 <p>Two notes, the PG_USER and PG_PASS are environment variables that need to be set in your bash profile, thusly:</p>
 
 <p><code>export PG_USER = 'flatiron'</code>
-<code>'export PG_PASS = 'learnlovecode'</code></p>
+<code>export PG_PASS = 'learnlovecode'</code></p>
 
 <p>You know, for safety reasons.</p>
 
 <p>Second, the last line in this file is important for working with Heroku. Heroku will give your app an ENV (short for environment) hash with some data. In that hash is the database url, and will be essential for connecting the instance of a postgres db that heroku provides with your app.</p>
+
+<p>Now we need to make sure that your gem file is divided into a development group, and includes the proper postgres gems:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+</pre></td><td class='code'><pre><code class='Ruby'><span class='line'><span class="n">source</span> <span class="s2">&quot;https://rubygems.org&quot;</span>
+</span><span class='line'>
+</span><span class='line'><span class="n">ruby</span> <span class="s1">&#39;2.2.3&#39;</span>
+</span><span class='line'><span class="n">gem</span> <span class="s1">&#39;sinatra&#39;</span>
+</span><span class='line'><span class="n">gem</span> <span class="s1">&#39;activerecord&#39;</span>
+</span><span class='line'><span class="n">gem</span> <span class="s1">&#39;sinatra-activerecord&#39;</span>
+</span><span class='line'><span class="n">gem</span> <span class="s1">&#39;sinatra-flash&#39;</span>
+</span><span class='line'><span class="n">gem</span> <span class="s1">&#39;sinatra-redirect-with-flash&#39;</span>
+</span><span class='line'><span class="n">gem</span> <span class="s1">&#39;rake&#39;</span>
+</span><span class='line'>
+</span><span class='line'><span class="c1">#postgres!</span>
+</span><span class='line'><span class="n">gem</span> <span class="s1">&#39;postgresql&#39;</span>
+</span><span class='line'><span class="n">gem</span> <span class="s1">&#39;pg&#39;</span>
+</span><span class='line'>
+</span><span class='line'><span class="n">group</span> <span class="ss">:development</span> <span class="k">do</span>
+</span><span class='line'>  <span class="n">gem</span> <span class="s1">&#39;sqlite3&#39;</span>
+</span><span class='line'>  <span class="n">gem</span> <span class="s1">&#39;pry&#39;</span>
+</span><span class='line'>  <span class="n">gem</span> <span class="s1">&#39;pry-nav&#39;</span>
+</span><span class='line'>  <span class="n">gem</span> <span class="s1">&#39;rspec&#39;</span>
+</span><span class='line'>  <span class="n">gem</span> <span class="s1">&#39;tux&#39;</span>
+</span><span class='line'><span class="k">end</span>
+</span></code></pre></td></tr></table></div></figure>
+
 
 <p>Next we move on to making the connection with active record. In your config/environment file, you will have to do some extra work to connect to postgres and make it compliant with Heroku. I took this piece of code from a <a href="http://mherman.org/blog/2013/06/08/designing-with-class-sinatra-plus-postgresql-plus-heroku/#.VonyepMrJE5">great guide for getting Sinatra to work with Postgres and Heroku</a>, so credit where credit is due.</p>
 
@@ -212,17 +259,41 @@
 <span class='line-number'>9</span>
 <span class='line-number'>10</span>
 <span class='line-number'>11</span>
-</pre></td><td class='code'><pre><code class='Ruby'><span class='line'><span class="n">db</span> <span class="o">=</span>  <span class="no">URI</span><span class="o">.</span><span class="n">parse</span><span class="p">(</span><span class="no">ENV</span><span class="o">[</span><span class="s1">&#39;DATABASE_URL&#39;</span><span class="o">]</span> <span class="o">||</span> <span class="s1">&#39;postgres://localhost/db/my_db_development&#39;</span><span class="p">)</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+</pre></td><td class='code'><pre><code class='Ruby'><span class='line'><span class="nb">require</span> <span class="s1">&#39;bundler&#39;</span>
+</span><span class='line'><span class="no">Bundler</span><span class="o">.</span><span class="n">require</span><span class="p">(</span><span class="ss">:default</span><span class="p">,</span> <span class="ss">:development</span><span class="p">,</span> <span class="ss">:production</span><span class="p">)</span>
 </span><span class='line'>
-</span><span class='line'><span class="no">ActiveRecord</span><span class="o">::</span><span class="no">Base</span><span class="o">.</span><span class="n">establish_connection</span><span class="p">(</span>
-</span><span class='line'>  <span class="ss">:adapter</span>  <span class="o">=&gt;</span> <span class="n">db</span><span class="o">.</span><span class="n">scheme</span> <span class="o">==</span> <span class="s1">&#39;postgres&#39;</span> <span class="p">?</span> <span class="s1">&#39;postgresql&#39;</span> <span class="p">:</span> <span class="n">db</span><span class="o">.</span><span class="n">scheme</span><span class="p">,</span>
-</span><span class='line'>  <span class="ss">:host</span>     <span class="o">=&gt;</span> <span class="n">db</span><span class="o">.</span><span class="n">host</span><span class="p">,</span>
-</span><span class='line'>  <span class="ss">:username</span> <span class="o">=&gt;</span> <span class="n">db</span><span class="o">.</span><span class="n">user</span><span class="p">,</span>
-</span><span class='line'>  <span class="ss">:password</span> <span class="o">=&gt;</span> <span class="n">db</span><span class="o">.</span><span class="n">password</span><span class="p">,</span>
-</span><span class='line'>  <span class="ss">:database</span> <span class="o">=&gt;</span> <span class="n">db</span><span class="o">.</span><span class="n">path</span><span class="o">[</span><span class="mi">1</span><span class="o">.</span><span class="n">.</span><span class="o">-</span><span class="mi">1</span><span class="o">]</span><span class="p">,</span>
-</span><span class='line'>  <span class="ss">:encoding</span> <span class="o">=&gt;</span> <span class="s1">&#39;SQL_ASCII&#39;</span>
+</span><span class='line'><span class="n">configure</span> <span class="ss">:production</span><span class="p">,</span> <span class="ss">:development</span> <span class="k">do</span>
+</span><span class='line'>  <span class="n">db</span> <span class="o">=</span>  <span class="no">URI</span><span class="o">.</span><span class="n">parse</span><span class="p">(</span><span class="no">ENV</span><span class="o">[</span><span class="s1">&#39;DATABASE_URL&#39;</span><span class="o">]</span> <span class="o">||</span> <span class="s1">&#39;postgres://localhost/db/topofthemorning_development&#39;</span><span class="p">)</span>
+</span><span class='line'><span class="c1">#  db =  &#39;postgres://localhost/topofthemorning_development&#39;</span>
 </span><span class='line'>
-</span><span class='line'><span class="p">)</span>
+</span><span class='line'>  <span class="no">ActiveRecord</span><span class="o">::</span><span class="no">Base</span><span class="o">.</span><span class="n">establish_connection</span><span class="p">(</span>
+</span><span class='line'>    <span class="ss">:adapter</span>  <span class="o">=&gt;</span> <span class="n">db</span><span class="o">.</span><span class="n">scheme</span> <span class="o">==</span> <span class="s1">&#39;postgres&#39;</span> <span class="p">?</span> <span class="s1">&#39;postgresql&#39;</span> <span class="p">:</span> <span class="n">db</span><span class="o">.</span><span class="n">scheme</span><span class="p">,</span>
+</span><span class='line'>    <span class="ss">:host</span>     <span class="o">=&gt;</span> <span class="n">db</span><span class="o">.</span><span class="n">host</span><span class="p">,</span>
+</span><span class='line'>    <span class="ss">:username</span> <span class="o">=&gt;</span> <span class="n">db</span><span class="o">.</span><span class="n">user</span><span class="p">,</span>
+</span><span class='line'>    <span class="ss">:password</span> <span class="o">=&gt;</span> <span class="n">db</span><span class="o">.</span><span class="n">password</span><span class="p">,</span>
+</span><span class='line'>    <span class="ss">:database</span> <span class="o">=&gt;</span> <span class="n">db</span><span class="o">.</span><span class="n">path</span><span class="o">[</span><span class="mi">1</span><span class="o">.</span><span class="n">.</span><span class="o">-</span><span class="mi">1</span><span class="o">]</span><span class="p">,</span>
+</span><span class='line'>    <span class="ss">:encoding</span> <span class="o">=&gt;</span> <span class="s1">&#39;SQL_ASCII&#39;</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="p">)</span>
+</span><span class='line'><span class="k">end</span>
+</span><span class='line'>
+</span><span class='line'><span class="n">require_relative</span> <span class="s1">&#39;../app/controllers/application_controller.rb&#39;</span>
+</span><span class='line'><span class="n">require_all</span> <span class="s1">&#39;app/models&#39;</span>
+</span><span class='line'>
+</span><span class='line'><span class="nb">require</span> <span class="s2">&quot;open-uri&quot;</span>
+</span><span class='line'><span class="nb">require</span> <span class="s2">&quot;json&quot;</span>
 </span></code></pre></td></tr></table></div></figure>
 
 
