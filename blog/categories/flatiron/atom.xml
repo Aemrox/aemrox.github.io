@@ -4,7 +4,7 @@
   <title><![CDATA[Category: Flatiron | Ride or Pry]]></title>
   <link href="http://aemrox.github.io/blog/categories/flatiron/atom.xml" rel="self"/>
   <link href="http://aemrox.github.io/"/>
-  <updated>2016-01-05T11:37:27-05:00</updated>
+  <updated>2016-01-05T14:06:46-05:00</updated>
   <id>http://aemrox.github.io/</id>
   <author>
     <name><![CDATA[Adam May]]></name>
@@ -60,9 +60,7 @@
 
 <p>According to heroku, SQLite3 is not a production-grade database. Their reasoning as sound, and can be <a href="https://devcenter.heroku.com/articles/sqlite3">read here</a> if you are interested.</p>
 
-<p>This means we are going to have to upgrade our databases. Full disclosure, as of right now, I haven&rsquo;t gotten this to work 100% yet.</p>
-
-<p>Postgres is fairly easy to get your hands on, it&rsquo;s open source and readily available. You might already have it installed.</p>
+<p>This means we are going to have to upgrade our databases. Postgres is fairly easy to get your hands on, it&rsquo;s open source and readily available. You might already have it installed.</p>
 
 <p>If you don&rsquo;t you can do so by typing in:</p>
 
@@ -186,7 +184,7 @@ require "json"
 <ol>
 <li>When you make changes to your code, you need to push them up to git before you push them up to heroku. When you push to Heroku, it&rsquo;s coming from your git repository, not your local files.</li>
 <li>Postgres is a lot stricter on the &lsquo;foreign key&rsquo; constraint. If you write your migrations with belongs_to relationships, and define foreign keys, make sure that the table already exists in a previous migration. Sqlite3 will let that shit slide, but postgres is a lot less forgiving.</li>
-<li>Pry doesn&rsquo;t work in your production environment! If you&rsquo;re code is broken it is much harder to fix once in a production environment. SO - a solid tip is make sure your code is working before you deploy it.</li>
+<li>Pry doesn&rsquo;t work in your heroku! If you&rsquo;re code is broken it is much harder to fix once in a production environment. SO - a solid tip is make sure your code is working before you deploy it.</li>
 <li>So Pry doesn&rsquo;t work, but you can still do some spot debugging by writing some rake tasks. For instance, if I want to see what&rsquo;s going on in my environment db, I can write some rake tasks to display the contents of a few of my models.</li>
 <li>Rake tasks are an awesome way to interact with your code in general once it&rsquo;s in environment, having some tasks is a great way to do some maintenancy things, like clearing your db, or resetting a user, etc.</li>
 <li>Make sure to set your public folder explicitly in your app controller! Otherwise, heroku will not serve your CSS, images, or any other files you link to your html from your public folder. Do so like this right in your application controller:
