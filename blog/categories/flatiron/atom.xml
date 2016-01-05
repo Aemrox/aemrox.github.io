@@ -4,7 +4,7 @@
   <title><![CDATA[Category: Flatiron | Ride or Pry]]></title>
   <link href="http://aemrox.github.io/blog/categories/flatiron/atom.xml" rel="self"/>
   <link href="http://aemrox.github.io/"/>
-  <updated>2016-01-05T10:18:01-05:00</updated>
+  <updated>2016-01-05T11:25:05-05:00</updated>
   <id>http://aemrox.github.io/</id>
   <author>
     <name><![CDATA[Adam May]]></name>
@@ -14,7 +14,7 @@
 
   
   <entry>
-    <title type="html"><![CDATA[Deploying to Heroku, or How I Learned to Stop Worrying and Love Postgres]]></title>
+    <title type="html"><![CDATA[Deploying Sinatra to Heroku, or How I Learned to Stop Worrying and Love Postgres]]></title>
     <link href="http://aemrox.github.io/blog/2016/01/04/deploying-to-heroku/"/>
     <updated>2016-01-04T13:27:07-05:00</updated>
     <id>http://aemrox.github.io/blog/2016/01/04/deploying-to-heroku</id>
@@ -68,7 +68,13 @@
 
 <p><code>brew install postgres</code></p>
 
-<p>You will also need to include the &lsquo;pg&rsquo; gem, which will act as your adapter between active record and postgres - much like our sqlite3 gem has done up until now.</p>
+<p>Now, we need to make sure that your postgres db launches automatically. There is a good guide <a href="http://www.tunnelsup.com/setting-up-postgres-on-mac-osx">here</a>, which I&rsquo;ll summarize quickly.</p>
+
+<p>After you&rsquo;ve gotten postgres installed via brew, open it up in your finder and make sure it&rsquo;s running on your computer. Then you need to initialize your database, using the following command:</p>
+
+<p><code>initdb /usr/local/var/postgres</code></p>
+
+<p>You can continue following the instructions in order to get postgres to launch automatically, however, if you have it up and running right now, we can move on.</p>
 
 <h2>Sinatra, you sweet, sweet lightweight fool</h2>
 
@@ -83,7 +89,7 @@
 <pre><code class="yaml">default: &amp;default
   adapter: postgresql
   pool: 5
-  encoding: SQL_ASCII
+  encoding: UTF8
   timeout: 5000
   port: 5432
 
@@ -110,7 +116,7 @@ production:
 
 <p>Second, the last line in this file is important for working with Heroku. Heroku will give your app an ENV (short for environment) hash with some data. In that hash is the database url, and will be essential for connecting the instance of a postgres db that heroku provides with your app.</p>
 
-<p>Now we need to make sure that your gem file is divided into a development group, and includes the proper postgres gems:</p>
+<p>Now we need to make sure that your gem file is divided into a development group, and includes the proper postgres gems. You will also need to include the &lsquo;pg&rsquo; gem, which will act as your adapter between active record and postgres - much like our sqlite3 gem has done up until now.:</p>
 
 <pre><code class="Ruby">source "https://rubygems.org"
 
@@ -127,7 +133,6 @@ gem 'postgresql'
 gem 'pg'
 
 group :development do
-  gem 'sqlite3'
     gem 'pry'
     gem 'pry-nav'
   gem 'rspec'
@@ -141,7 +146,7 @@ end
 Bundler.require(:default, :development, :production)
 
 configure :production, :development do
-  db =  URI.parse(ENV['DATABASE_URL'] || 'postgres://localhost/db/topofthemorning_development')
+  db =  URI.parse(ENV['DATABASE_URL'] || 'postgres://localhost/[the name you gave your db in your yaml file]')
 #  db =  'postgres://localhost/topofthemorning_development'
 
   ActiveRecord::Base.establish_connection(
@@ -150,7 +155,7 @@ configure :production, :development do
     :username =&gt; db.user,
     :password =&gt; db.password,
     :database =&gt; db.path[1..-1],
-    :encoding =&gt; 'SQL_ASCII'
+    :encoding =&gt; 'UTF8'
 
   )
 end
@@ -162,17 +167,31 @@ require "open-uri"
 require "json"
 </code></pre>
 
-<p>The first line of code sets the database connection. It first checks to see if it&rsquo;s being served with a url (which we received from Heroku and assigned in our database.yml file), otherwise it uses the database we set up in our yml file.</p>
+<p>The fifth line of code sets the database connection. It first checks to see if it&rsquo;s being served with a url (which we received from Heroku and assigned in our database.yml file), otherwise it uses the database we set up in our yml file.</p>
+
+<p>As another note, make sure you name your local db on the other end of the || the same as you did in the database.yml file.</p>
+
+<p>And that should do it! Your postgres db should be running locally just fine (really you should probably check). You can redeploy your app to heroku (with the <code>git push heroku master</code> command) and it should be up and running!</p>
+
+<p>Keep in mind if your db has any data in it before, it will be gone now!</p>
 
 <h2>Full Disclosure</h2>
 
-<p>This is as far as I got. Seriously, as of writing this, my shit still doesn&rsquo;t work. However, that being said, I have one pitfall to avoid, and one or two hints to give you so you can avoid the cesspit I currently find myself in.</p>
+<p>I did not get this far on my own at all. Seriously, as of first writing this, my shit still didn&rsquo;t work. Thanks to help from some awesome people (thanks Sophie and Joe!), I&rsquo;ve gotten it up and running.</p>
+
+<p>However, that being said, I have a few pitfalls to avoid and few hints to give you so you can dodge the cesspit I found myself mired in for a few days.</p>
 
 <ol>
+<li>When you make changes to your code, you need to push them up to git before you push them up to heroku. When you push to Heroku, it&rsquo;s coming from your git repository, not your local files.</li>
 <li>Postgres is a lot stricter on the &lsquo;foreign key&rsquo; constraint. If you write your migrations with belongs_to relationships, and define foreign keys, make sure that the table already exists in a previous migration. Sqlite3 will let that shit slide, but postgres is a lot less forgiving.</li>
-<li>Pry doesn&rsquo;t work in your production environment! If you&rsquo;re code is broken it is much harder to fix once in a production environment. SO - tip 1 is make sure your code is working before you deploy it.</li>
+<li>Pry doesn&rsquo;t work in your production environment! If you&rsquo;re code is broken it is much harder to fix once in a production environment. SO - a solid tip is make sure your code is working before you deploy it.</li>
 <li>So Pry doesn&rsquo;t work, but you can still do some spot debugging by writing some rake tasks. For instance, if I want to see what&rsquo;s going on in my environment db, I can write some rake tasks to display the contents of a few of my models.</li>
 <li>Rake tasks are an awesome way to interact with your code in general once it&rsquo;s in environment, having some tasks is a great way to do some maintenancy things, like clearing your db, or resetting a user, etc.</li>
+<li>Make sure you delete the sqlite3 gem from any mention in your gemfile. Also, go into your Gemfile.lock and delete any mentions of sqlite3 to remove any accidental dependencies. Make sure to run bundle install before you try to redploy.</li>
+<li>Make sure to set your public folder explicitly in your app controller! Otherwise, heroku will not serve your CSS, images, or any other files you link to your html from your public folder. Do so like this right in your application controller:
+<code>Ruby
+set :public_folder, File.join(root, "../../public")
+</code></li>
 </ol>
 
 
