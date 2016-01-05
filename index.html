@@ -111,7 +111,7 @@
 
 <p>If it seems to good to be true, that&rsquo;s because it is. The problem is, we are not using rails, we are using Sinatra - and on top of that, we&rsquo;re using the Tyrion Lanister of databases - sqlite3. It&rsquo;s totally functional, but it does not scale at all.</p>
 
-<p><img src="https://media4.giphy.com/media/Gqy93G8Ezezny/200.gif" alt="Tyrion" /></p>
+<p style="text-align:center;"><img src="https://media4.giphy.com/media/Gqy93G8Ezezny/200.gif" alt="Tyrion" /></p>
 
 <h2>Development Vs. Production</h2>
 
@@ -123,7 +123,7 @@
 
 <p>In big companies, there are generally steps in between Development and Production (such as testing, quality assurance and staging), but for now let&rsquo;s focus on these two. So what does this mean for us? It means we have to start thinking about what it means to push something up to production. It&rsquo;s time to get serious.</p>
 
-<p><img src="https://cf.geekdo-images.com/images/pic323510.jpg" alt="warning shot" /></p>
+<p style="text-align:center;"><img src="https://cf.geekdo-images.com/images/pic323510.jpg" alt="warning shot" /></p>
 
 <h2>Getting with the Postgres</h2>
 
@@ -145,49 +145,75 @@
 
 <p>After including the &lsquo;pg&rsquo; gem in our gemfile, we are going to need to create a database.yml file in your config folder, right next to environment.rb.</p>
 
-<p><img src="http://i.imgur.com/TFZMqmw.png" alt="Database.yml in action" /></p>
+<p style="text-align:center;"><img src="http://i.imgur.com/TFZMqmw.png" alt="Database.yml in action" /></p>
 
 <p>Here is a sample yaml file that serves as a decent template.</p>
 
-<p>`default: &amp;default
-  adapter: postgresql
-  pool: 5
-  encoding: SQL_ASCII
-  timeout: 5000
-  port: 5432</p>
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+</pre></td><td class='code'><pre><code class='yaml'><span class='line'><span class="l-Scalar-Plain">default</span><span class="p-Indicator">:</span> <span class="nl">&amp;default</span>
+</span><span class='line'>  <span class="l-Scalar-Plain">adapter</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">postgresql</span>
+</span><span class='line'>  <span class="l-Scalar-Plain">pool</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">5</span>
+</span><span class='line'>  <span class="l-Scalar-Plain">encoding</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">SQL_ASCII</span>
+</span><span class='line'>  <span class="l-Scalar-Plain">timeout</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">5000</span>
+</span><span class='line'>  <span class="l-Scalar-Plain">port</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">5432</span>
+</span><span class='line'>
+</span><span class='line'><span class="l-Scalar-Plain">development</span><span class="p-Indicator">:</span>
+</span><span class='line'>  <span class="l-Scalar-Plain">&lt;&lt;</span><span class="p-Indicator">:</span> <span class="nv">*default</span>
+</span><span class='line'>  <span class="l-Scalar-Plain">database</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">db/my_db_development</span>
+</span><span class='line'>
+</span><span class='line'><span class="l-Scalar-Plain">test</span><span class="p-Indicator">:</span>
+</span><span class='line'>  <span class="l-Scalar-Plain">&lt;&lt;</span><span class="p-Indicator">:</span> <span class="nv">*default</span>
+</span><span class='line'>  <span class="l-Scalar-Plain">database</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">db/my_db_test</span>
+</span><span class='line'>
+</span><span class='line'><span class="l-Scalar-Plain">production</span><span class="p-Indicator">:</span>
+</span><span class='line'>  <span class="l-Scalar-Plain">url</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">&lt;%= ENV[&quot;DATABASE_URL&quot;] %&gt;</span>
+</span></code></pre></td></tr></table></div></figure>
 
-<p>development:
-  &lt;&lt;: *default
-  database: db/my_db_development</p>
-
-<h1>Warning: The database defined as &ldquo;test&rdquo; will be erased and</h1>
-
-<h1>re-generated from your development database when you run &ldquo;rake&rdquo;.</h1>
-
-<h1>Do not set this db to the same as development or production.</h1>
-
-<p>test:
-  &lt;&lt;: *default
-  database: db/my_db_test</p>
-
-<p>production:
-  url: &lt;%= ENV[&ldquo;DATABASE_URL&rdquo;] %>`</p>
 
 <p>The last line in this file is important for working with Heroku. Heroku will give your app an ENV (short for environment) hash with some data. In that hash is the database url, and will be essential for connecting the instance of a postgres db that heroku provides with your app.</p>
 
 <p>Next we move on to making the connection with active record. In your config/environment file, you will have to do some extra work to connect to postgres and make it compliant with Heroku. I took this piece of code from a <a href="http://mherman.org/blog/2013/06/08/designing-with-class-sinatra-plus-postgresql-plus-heroku/#.VonyepMrJE5">great guide for getting Sinatra to work with Postgres and Heroku</a>, so credit where credit is due.</p>
 
-<p>`db =  URI.parse(ENV[&lsquo;DATABASE_URL&rsquo;]) || &lsquo;postgres://user:pass@localhost/db/my_db_development&rsquo;</p>
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+</pre></td><td class='code'><pre><code class='Ruby'><span class='line'><span class="n">db</span> <span class="o">=</span>  <span class="no">URI</span><span class="o">.</span><span class="n">parse</span><span class="p">(</span><span class="no">ENV</span><span class="o">[</span><span class="s1">&#39;DATABASE_URL&#39;</span><span class="o">]</span><span class="p">)</span> <span class="o">||</span> <span class="s1">&#39;postgres://user:pass@localhost/db/my_db_development&#39;</span>
+</span><span class='line'>
+</span><span class='line'><span class="no">ActiveRecord</span><span class="o">::</span><span class="no">Base</span><span class="o">.</span><span class="n">establish_connection</span><span class="p">(</span>
+</span><span class='line'>  <span class="ss">:adapter</span>  <span class="o">=&gt;</span> <span class="n">db</span><span class="o">.</span><span class="n">scheme</span> <span class="o">==</span> <span class="s1">&#39;postgres&#39;</span> <span class="p">?</span> <span class="s1">&#39;postgresql&#39;</span> <span class="p">:</span> <span class="n">db</span><span class="o">.</span><span class="n">scheme</span><span class="p">,</span>
+</span><span class='line'>  <span class="ss">:host</span>     <span class="o">=&gt;</span> <span class="n">db</span><span class="o">.</span><span class="n">host</span><span class="p">,</span>
+</span><span class='line'>  <span class="ss">:username</span> <span class="o">=&gt;</span> <span class="n">db</span><span class="o">.</span><span class="n">user</span><span class="p">,</span>
+</span><span class='line'>  <span class="ss">:password</span> <span class="o">=&gt;</span> <span class="n">db</span><span class="o">.</span><span class="n">password</span><span class="p">,</span>
+</span><span class='line'>  <span class="ss">:database</span> <span class="o">=&gt;</span> <span class="n">db</span><span class="o">.</span><span class="n">path</span><span class="o">[</span><span class="mi">1</span><span class="o">.</span><span class="n">.</span><span class="o">-</span><span class="mi">1</span><span class="o">]</span><span class="p">,</span>
+</span><span class='line'>  <span class="ss">:encoding</span> <span class="o">=&gt;</span> <span class="s1">&#39;SQL_ASCII&#39;</span>
+</span><span class='line'>
+</span><span class='line'><span class="p">)</span>
+</span></code></pre></td></tr></table></div></figure>
 
-<p>ActiveRecord::Base.establish_connection(
-  :adapter  => db.scheme == &lsquo;postgres&rsquo; ? &lsquo;postgresql&rsquo; : db.scheme,
-  :host     => db.host,
-  :username => db.user,
-  :password => db.password,
-  :database => db.path[1..-1],
-  :encoding => &lsquo;SQL_ASCII&rsquo;</p>
-
-<p>)`</p>
 
 <p>The first line of code sets the database connection. It first checks to see if it&rsquo;s being served with a url (which we received from Heroku and assigned in our database.yml file), otherwise it uses the database we set up in our yml file.</p>
 
@@ -203,7 +229,9 @@
 </ol>
 
 
-<p>That&rsquo;s all I got guys, hopefully, once you tune in next time this will be further down the road.</p>
+<p>That&rsquo;s all I got guys, hopefully, once you tune in next time this will be further down the road. You know what they say, when you shoot for the stars and miss, at least you still have cat gifs:</p>
+
+<p style="text-align:center;"><img src="https://media0.giphy.com/media/jO161HOYUPKEM/200.gif" alt="failcat" /></p>
 </div>
   
   
