@@ -4,7 +4,7 @@
   <title><![CDATA[Category: School | Ride or Pry]]></title>
   <link href="http://aemrox.github.io/blog/categories/school/atom.xml" rel="self"/>
   <link href="http://aemrox.github.io/"/>
-  <updated>2016-01-05T11:25:05-05:00</updated>
+  <updated>2016-01-05T11:37:27-05:00</updated>
   <id>http://aemrox.github.io/</id>
   <author>
     <name><![CDATA[Adam May]]></name>
@@ -116,7 +116,9 @@ production:
 
 <p>Second, the last line in this file is important for working with Heroku. Heroku will give your app an ENV (short for environment) hash with some data. In that hash is the database url, and will be essential for connecting the instance of a postgres db that heroku provides with your app.</p>
 
-<p>Now we need to make sure that your gem file is divided into a development group, and includes the proper postgres gems. You will also need to include the &lsquo;pg&rsquo; gem, which will act as your adapter between active record and postgres - much like our sqlite3 gem has done up until now.:</p>
+<p>Now we need to make sure that your gem file is divided into a development group, and includes the proper postgres gems. You will also need to include the &lsquo;pg&rsquo; gem, which will act as your adapter between active record and postgres - much like our sqlite3 gem has done up until now.</p>
+
+<p>Heroku REALLY hates sqlite. Make sure you delete the sqlite3 gem from any mention in your gemfile. Also, go into your Gemfile.lock and delete any mentions of sqlite3 to remove any accidental dependencies (or just delete your Gemfile.lock). Make sure to run bundle install before you try to redeploy.</p>
 
 <pre><code class="Ruby">source "https://rubygems.org"
 
@@ -187,7 +189,6 @@ require "json"
 <li>Pry doesn&rsquo;t work in your production environment! If you&rsquo;re code is broken it is much harder to fix once in a production environment. SO - a solid tip is make sure your code is working before you deploy it.</li>
 <li>So Pry doesn&rsquo;t work, but you can still do some spot debugging by writing some rake tasks. For instance, if I want to see what&rsquo;s going on in my environment db, I can write some rake tasks to display the contents of a few of my models.</li>
 <li>Rake tasks are an awesome way to interact with your code in general once it&rsquo;s in environment, having some tasks is a great way to do some maintenancy things, like clearing your db, or resetting a user, etc.</li>
-<li>Make sure you delete the sqlite3 gem from any mention in your gemfile. Also, go into your Gemfile.lock and delete any mentions of sqlite3 to remove any accidental dependencies. Make sure to run bundle install before you try to redploy.</li>
 <li>Make sure to set your public folder explicitly in your app controller! Otherwise, heroku will not serve your CSS, images, or any other files you link to your html from your public folder. Do so like this right in your application controller:
 <code>Ruby
 set :public_folder, File.join(root, "../../public")
