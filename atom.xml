@@ -4,7 +4,7 @@
   <title><![CDATA[Ride or Pry]]></title>
   <link href="http://aemrox.github.io/atom.xml" rel="self"/>
   <link href="http://aemrox.github.io/"/>
-  <updated>2016-01-25T19:26:43-05:00</updated>
+  <updated>2016-01-26T11:01:32-05:00</updated>
   <id>http://aemrox.github.io/</id>
   <author>
     <name><![CDATA[Adam May]]></name>
@@ -61,7 +61,7 @@
 </span></code></pre></td></tr></table></div></figure>
 
 
-<p>While strictly speaking, ruby does not support First-class Functions. Methods cannot be return values or held in variables. But methods are far from all Ruby uses to implement functions. And some of these functions have Javascript-y super powers.</p>
+<p>Strictly speaking, ruby does not support First-class Functions. Methods cannot be return values or held in variables. But methods are far from all Ruby uses to implement functions. And some of these functions have Javascript-y super powers.</p>
 
 <h2>Blocks and Yield</h2>
 
@@ -169,7 +169,7 @@
 </span><span class='line'>    <span class="n">new_array</span>
 </span><span class='line'>  <span class="k">end</span>
 </span><span class='line'>
-</span><span class='line'>  <span class="n">cool_map</span><span class="p">(</span><span class="o">[</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">3</span><span class="p">,</span><span class="mi">4</span><span class="o">]</span><span class="p">,</span> <span class="n">cuber</span><span class="p">)</span>
+</span><span class='line'>  <span class="n">cool_map</span><span class="p">(</span><span class="o">[</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">3</span><span class="p">,</span><span class="mi">4</span><span class="o">]</span><span class="p">,</span> <span class="n">cuber</span><span class="p">)</span><span class="c1">#-&gt; [1,8,27,64]</span>
 </span></code></pre></td></tr></table></div></figure>
 
 
@@ -246,13 +246,13 @@
 
 <p>There are two other key differences, which very much affect the way these are used.</p>
 
-<h3>Arity Checking</h3>
+<h5>Arity Checking</h5>
 
 <p>As we&rsquo;ve seen with Javascript, sometimes languages do not care about whether the number of arguments you pass to a function match the number of arguments that function takes.</p>
 
 <p>Procs will not throw an argument error if they are passed a varying number of arguments, while Lambdas do enforce argument strictness (or in other words, they arity check). This makes procs a little dangerous, only in the sense that they will fail silently if you mess something up (like Javascript), but they are also more flexible.</p>
 
-<h3>Return of the Lambda</h3>
+<h5>Return of the Lambda</h5>
 
 <p>Procs and Lambdas differ in the way that they return values to where they are called. A Proc does not create it&rsquo;s own &ldquo;return scope&rdquo;, meaning it almost becomes a part of the function that calls it. So if a Proc triggers the return keyword, it will short-circuit the rest of the method that called it.</p>
 
