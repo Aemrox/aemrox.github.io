@@ -4,7 +4,7 @@
   <title><![CDATA[Ride or Pry]]></title>
   <link href="http://aemrox.github.io/atom.xml" rel="self"/>
   <link href="http://aemrox.github.io/"/>
-  <updated>2016-01-26T11:01:32-05:00</updated>
+  <updated>2016-01-26T11:08:07-05:00</updated>
   <id>http://aemrox.github.io/</id>
   <author>
     <name><![CDATA[Adam May]]></name>
@@ -219,7 +219,7 @@
 
 <p><img src="http://3.bp.blogspot.com/-8AfGm4Uy3CU/UBqhxWvD7VI/AAAAAAAAARU/iVQAHfgv3cs/s1600/a-wolf-in-sheeps-clo_1339994049_epiclolcom.png" alt="Soon" /></p>
 
-<p>Now there is one more way in which Ruby supports first class functions: lambdas. Lambdas are actually a lot like procs, but almost a different &ldquo;flavor&rdquo;. They can be passed back and forth, and are called similarly to lambdas, but they are declared slightly differently, and have a few other important differences.</p>
+<p>Now there is one more way in which Ruby supports first class functions: lambdas. Lambdas are actually a lot like procs, but almost a different &ldquo;flavor&rdquo;. Lambdas can be passed back and forth, and are called similarly to procs, but they are declared slightly differently, and have a few other important differences.</p>
 
 <figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
 <span class='line-number'>2</span>
@@ -250,7 +250,7 @@
 
 <p>As we&rsquo;ve seen with Javascript, sometimes languages do not care about whether the number of arguments you pass to a function match the number of arguments that function takes.</p>
 
-<p>Procs will not throw an argument error if they are passed a varying number of arguments, while Lambdas do enforce argument strictness (or in other words, they arity check). This makes procs a little dangerous, only in the sense that they will fail silently if you mess something up (like Javascript), but they are also more flexible.</p>
+<p>Similar to Javascript functions, Procs will not throw an argument error if they are passed a varying number of arguments, while Lambdas do enforce argument strictness (or in other words, they arity check). This makes procs a little dangerous, only in the sense that they will fail silently if you mess something up (like Javascript), but they are also more flexible.</p>
 
 <h5>Return of the Lambda</h5>
 
@@ -273,7 +273,7 @@
 </span></code></pre></td></tr></table></div></figure>
 
 
-<p>Lambdas are different, they almost create their own return scope, so if a lambda triggers the return keyword, it will exit the lambda code, but return to the method that called it.</p>
+<p>Lambdas are different, they do create their own return scope, so if a lambda triggers the return keyword, it will exit the lambda code, but return to the method that called it.</p>
 
 <figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
 <span class='line-number'>2</span>
@@ -300,10 +300,13 @@
 <h2>Resources</h2>
 
 <p>I took a lot of things from people smarter than I, here they are:
-<a href="http://www.sitepoint.com/functional-programming-techniques-with-ruby-part-ii/">Functional Programming Techniques With Ruby: Part II</a>
-<a href="http://javascriptissexy.com/javascript-apply-call-and-bind-methods-are-essential-for-javascript-professionals/">JavaScript’s Apply, Call, and Bind Methods are Essential for JavaScript Professionals</a>
-<a href="https://rubymonk.com/learning/books/4-ruby-primer-ascent/chapters/18-blocks/lessons/64-blocks-procs-lambdas">Ruby Monk on Blocks Procs and Lambdas</a>
-<a href="http://awaxman11.github.io/blog/2013/08/05/what-is-the-difference-between-a-block/">What Is the Difference Between a Block, a Proc, and a Lambda in Ruby? (I actually think this is a former flatiron blog)</a></p>
+<a href="http://www.sitepoint.com/functional-programming-techniques-with-ruby-part-ii/">Functional Programming Techniques With Ruby: Part II</a></p>
+
+<p><a href="http://javascriptissexy.com/javascript-apply-call-and-bind-methods-are-essential-for-javascript-professionals/">JavaScript’s Apply, Call, and Bind Methods are Essential for JavaScript Professionals</a></p>
+
+<p><a href="https://rubymonk.com/learning/books/4-ruby-primer-ascent/chapters/18-blocks/lessons/64-blocks-procs-lambdas">Ruby Monk on Blocks Procs and Lambdas</a></p>
+
+<p><a href="http://awaxman11.github.io/blog/2013/08/05/what-is-the-difference-between-a-block/">What Is the Difference Between a Block, a Proc, and a Lambda in Ruby? (I actually think this is a former flatiron blog)</a></p>
 ]]></content>
   </entry>
   
