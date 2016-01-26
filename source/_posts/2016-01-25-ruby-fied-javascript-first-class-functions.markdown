@@ -7,7 +7,7 @@ categories:
 ---
 As I've started learning Javascript, I've had alternating moments of progressively confusing rage, soul-encompassing ["wat"](http://knowyourmeme.com/memes/wat), laced with moments of being genuinely impressed by Javascript's functional elements. It's like eating your least favorite ice cream flavor mixed with your favorite sprinkles.
 
-!["What is this, I don't Even"](http://knowyourmeme.com/photos/517320-what-is-this-i-dont-even)
+!["What is this, I don't Even"](http://i1.kym-cdn.com/photos/images/original/000/517/320/71c.gif)
 
 However, as I've delved deeper into some of these features, I've been inspired to go back to Ruby and see which of these features have equivalents, and I've been pleasantly surprised to see that more than a few do.
 
@@ -51,7 +51,7 @@ some_method([1,2,3,4]) do |elem|
 end #-> 2, 4, 6, 8
 ```
 
-In this example we are actually passing two blocks into methods. This is almost like passing a function as an argument, except we define the whole function, and instead of calling it by name, it gets called when we use the **yield** keyword. It even has the coolest property of a closure, which is access to the scope in which it was defined.
+In this example we are actually passing a block into a method twice, first when we call #some_method and next when we call the #each method. This is almost like passing a function as an argument, except we define the whole function, and instead of calling it by name, it gets called when we use the **yield** keyword. It's pretty much a regular closure and it even has the coolest property of a closure, which is access to the scope in which it was defined.
 
 ```ruby
 x= 10
@@ -137,7 +137,7 @@ putstuff = Proc.new{|thing| puts thing}
 This allows us to save methods in variables and pass them into blocks with relative ease.  But there is one more step to consider when looking at how
 
 ##Mary had a little Lambda
-![Soon](http://www.tumblr.com/likes/page/10)
+![Soon](http://3.bp.blogspot.com/-8AfGm4Uy3CU/UBqhxWvD7VI/AAAAAAAAARU/iVQAHfgv3cs/s1600/a-wolf-in-sheeps-clo_1339994049_epiclolcom.png)
 
 Now there is one more way in which Ruby supports first class functions: lambdas. Lambdas are actually a lot like procs, but almost a different "flavor". They can be passed back and forth, and are called similarly to lambdas, but they are declared slightly differently, and have a few other important differences.
 
