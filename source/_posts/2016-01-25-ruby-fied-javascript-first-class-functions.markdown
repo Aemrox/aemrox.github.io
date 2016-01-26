@@ -139,7 +139,7 @@ This allows us to save methods in variables and pass them into blocks with relat
 ##Mary had a little Lambda
 ![Soon](http://3.bp.blogspot.com/-8AfGm4Uy3CU/UBqhxWvD7VI/AAAAAAAAARU/iVQAHfgv3cs/s1600/a-wolf-in-sheeps-clo_1339994049_epiclolcom.png)
 
-Now there is one more way in which Ruby supports first class functions: lambdas. Lambdas are actually a lot like procs, but almost a different "flavor". They can be passed back and forth, and are called similarly to lambdas, but they are declared slightly differently, and have a few other important differences.
+Now there is one more way in which Ruby supports first class functions: lambdas. Lambdas are actually a lot like procs, but almost a different "flavor". Lambdas can be passed back and forth, and are called similarly to procs, but they are declared slightly differently, and have a few other important differences.
 
 ```ruby
 proc_town = Proc.new {}
@@ -158,7 +158,7 @@ There are two other key differences, which very much affect the way these are us
 #####Arity Checking
 As we've seen with Javascript, sometimes languages do not care about whether the number of arguments you pass to a function match the number of arguments that function takes.
 
-Procs will not throw an argument error if they are passed a varying number of arguments, while Lambdas do enforce argument strictness (or in other words, they arity check). This makes procs a little dangerous, only in the sense that they will fail silently if you mess something up (like Javascript), but they are also more flexible.
+Similar to Javascript functions, Procs will not throw an argument error if they are passed a varying number of arguments, while Lambdas do enforce argument strictness (or in other words, they arity check). This makes procs a little dangerous, only in the sense that they will fail silently if you mess something up (like Javascript), but they are also more flexible.
 
 #####Return of the Lambda
 Procs and Lambdas differ in the way that they return values to where they are called. A Proc does not create it's own "return scope", meaning it almost becomes a part of the function that calls it. So if a Proc triggers the return keyword, it will short-circuit the rest of the method that called it.
@@ -173,7 +173,7 @@ end
 puts messing_with_procs #-> "'nothing' is wrong!"
 ```
 
-Lambdas are different, they almost create their own return scope, so if a lambda triggers the return keyword, it will exit the lambda code, but return to the method that called it.
+Lambdas are different, they do create their own return scope, so if a lambda triggers the return keyword, it will exit the lambda code, but return to the method that called it.
 
 ```ruby
 def sweet_sweet_lambdas
@@ -194,6 +194,9 @@ Turns out, ruby ain't no slouch. Though the traditional method of passing code t
 
 I took a lot of things from people smarter than I, here they are:
 [Functional Programming Techniques With Ruby: Part II](http://www.sitepoint.com/functional-programming-techniques-with-ruby-part-ii/)
+
 [JavaScript’s Apply, Call, and Bind Methods are Essential for JavaScript Professionals](http://javascriptissexy.com/javascript-apply-call-and-bind-methods-are-essential-for-javascript-professionals/)
+
 [Ruby Monk on Blocks Procs and Lambdas](https://rubymonk.com/learning/books/4-ruby-primer-ascent/chapters/18-blocks/lessons/64-blocks-procs-lambdas)
+
 [What Is the Difference Between a Block, a Proc, and a Lambda in Ruby? (I actually think this is a former flatiron blog)](http://awaxman11.github.io/blog/2013/08/05/what-is-the-difference-between-a-block/)
