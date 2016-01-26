@@ -4,7 +4,7 @@
   <title><![CDATA[Category: Flatiron | Ride or Pry]]></title>
   <link href="http://aemrox.github.io/blog/categories/flatiron/atom.xml" rel="self"/>
   <link href="http://aemrox.github.io/"/>
-  <updated>2016-01-05T14:06:46-05:00</updated>
+  <updated>2016-01-25T19:13:23-05:00</updated>
   <id>http://aemrox.github.io/</id>
   <author>
     <name><![CDATA[Adam May]]></name>
@@ -12,6 +12,15 @@
   </author>
   <generator uri="http://octopress.org/">Octopress</generator>
 
+  
+  <entry>
+    <title type="html"><![CDATA[Ruby-fied Javascript Part II: Currying]]></title>
+    <link href="http://aemrox.github.io/blog/2016/01/25/ruby-fied-javascript-currying/"/>
+    <updated>2016-01-25T14:11:44-05:00</updated>
+    <id>http://aemrox.github.io/blog/2016/01/25/ruby-fied-javascript-currying</id>
+    <content type="html"><![CDATA[
+]]></content>
+  </entry>
   
   <entry>
     <title type="html"><![CDATA[Deploying Sinatra to Heroku, or How I Learned to Stop Worrying and Love Postgres]]></title>

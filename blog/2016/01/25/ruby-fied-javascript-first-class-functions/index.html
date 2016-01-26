@@ -1,0 +1,482 @@
+
+<!DOCTYPE html>
+<!--[if IEMobile 7 ]><html class="no-js iem7"><![endif]-->
+<!--[if lt IE 9]><html class="no-js lte-ie8"><![endif]-->
+<!--[if (gt IE 8)|(gt IEMobile 7)|!(IEMobile)|!(IE)]><!--><html class="no-js" lang="en"><!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <title>Ruby-fied Javascript Part I: First Class Functions - Ride or Pry</title>
+  <meta name="author" content="Adam May">
+
+  
+  <meta name="description" content="As I&rsquo;ve started learning Javascript, I&rsquo;ve had alternating moments of progressively confusing rage, soul-encompassing &ldquo;wat&rdquo;, &hellip;">
+  
+
+  <!-- http://t.co/dKP3o1e -->
+  <meta name="HandheldFriendly" content="True">
+  <meta name="MobileOptimized" content="320">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  
+  <link rel="canonical" href="http://aemrox.github.io/blog/2016/01/25/ruby-fied-javascript-first-class-functions/">
+  <link href="/favicon.png" rel="icon">
+  <link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet" type="text/css">
+  <link href="/atom.xml" rel="alternate" title="Ride or Pry" type="application/atom+xml">
+  <script src="/javascripts/modernizr-2.0.js"></script>
+  <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+  <script>!window.jQuery && document.write(unescape('%3Cscript src="/javascripts/libs/jquery.min.js"%3E%3C/script%3E'))</script>
+  <script src="/javascripts/octopress.js" type="text/javascript"></script>
+  <!--Fonts from Google"s Web font directory at http://google.com/webfonts -->
+<link href="//fonts.googleapis.com/css?family=PT+Serif:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+<link href="//fonts.googleapis.com/css?family=PT+Sans:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+
+  
+
+</head>
+
+<body   >
+  <header role="banner"><hgroup>
+  <h1><a href="/">Ride or Pry</a></h1>
+  
+    <h2>Coding Ride it out or Pry trying</h2>
+  
+</hgroup>
+
+</header>
+  <nav role="navigation"><ul class="subscription" data-subscription="rss">
+  <li><a href="/atom.xml" rel="subscribe-rss" title="subscribe via RSS">RSS</a></li>
+  
+</ul>
+  
+<form action="https://www.google.com/search" method="get">
+  <fieldset role="search">
+    <input type="hidden" name="sitesearch" value="aemrox.github.io">
+    <input class="search" type="text" name="q" results="0" placeholder="Search"/>
+  </fieldset>
+</form>
+  
+<ul class="main-navigation">
+  <li><a href="/">Blog</a></li>
+  <li><a href="/blog/archives">Archives</a></li>
+</ul>
+
+</nav>
+  <div id="main">
+    <div id="content">
+      <div>
+<article class="hentry" role="article">
+  
+  <header>
+    
+      <h1 class="entry-title">Ruby-fied Javascript Part I: First Class Functions</h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+<time class='entry-date' datetime='2016-01-25T14:20:12-05:00'><span class='date'><span class='date-month'>Jan</span> <span class='date-day'>25</span><span class='date-suffix'>th</span>, <span class='date-year'>2016</span></span> <span class='time'>2:20 pm</span></time>
+        
+      </p>
+    
+  </header>
+
+
+<div class="entry-content"><p>As I&rsquo;ve started learning Javascript, I&rsquo;ve had alternating moments of progressively confusing rage, soul-encompassing <a href="http://knowyourmeme.com/memes/wat">&ldquo;wat&rdquo;</a>, laced with moments of being genuinely impressed by Javascript&rsquo;s functional elements. It&rsquo;s like eating your least favorite ice cream flavor mixed with your favorite sprinkles.</p>
+
+<p><img src="http://knowyourmeme.com/photos/517320-what-is-this-i-dont-even" alt="&quot;What is this, I don't Even&quot;" /></p>
+
+<p>However, as I&rsquo;ve delved deeper into some of these features, I&rsquo;ve been inspired to go back to Ruby and see which of these features have equivalents, and I&rsquo;ve been pleasantly surprised to see that more than a few do.</p>
+
+<p>In this first part, I want to explore how Ruby handles First-class Functions.</p>
+
+<h2>What is a First-class Function?</h2>
+
+<p>When a programming language is said to have First-class Functions, it&rsquo;s a way of saying that the language allows for functions to be treated like objects, and passed back and forth as arguments.</p>
+
+<p>So when we pass in a function as an argument in JS, or even get one back as a return value, we are exploiting this incredibly useful function of Javascript. As seen below:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+</pre></td><td class='code'><pre><code class='Javascript'><span class='line'><span class="kd">function</span> <span class="nx">theOneWePass</span><span class="p">(){</span>
+</span><span class='line'>  <span class="k">return</span> <span class="s2">&quot;This is from the function passed in&quot;</span><span class="p">;</span>
+</span><span class='line'><span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'><span class="kd">function</span> <span class="nx">theOneWeCall</span><span class="p">(</span><span class="nx">theOneWePass</span><span class="p">){</span>
+</span><span class='line'>  <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">theOneWePass</span><span class="p">());</span>
+</span><span class='line'>  <span class="k">return</span> <span class="kd">function</span><span class="p">(){</span>
+</span><span class='line'>    <span class="k">return</span> <span class="s2">&quot;and this is the function that was passed back&quot;</span><span class="p">;</span>
+</span><span class='line'>  <span class="p">};</span>
+</span><span class='line'><span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'><span class="kd">var</span> <span class="nx">thisHoldsAFunction</span> <span class="o">=</span> <span class="nx">theOneWeCall</span><span class="p">(</span><span class="nx">theOneWePass</span><span class="p">);</span> <span class="c1">// logs &quot;This is from the function passed in&quot;</span>
+</span><span class='line'><span class="nx">thisHoldsAFunction</span><span class="p">();</span> <span class="c1">//-&gt;&quot;and this is the function that was passed back&quot;</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>While strictly speaking, ruby does not support First-class Functions. Methods cannot be return values or held in variables. But methods are far from all Ruby uses to implement functions. And some of these functions have Javascript-y super powers.</p>
+
+<h2>Blocks and Yield</h2>
+
+<p>Nearly anyone who has touched Ruby is probably familiar with a block. It allows us to customize methods by passing in custom instructions that are executed somewhere within the method, using the <strong>yield</strong> keyword.</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+</pre></td><td class='code'><pre><code class='ruby'><span class='line'><span class="k">def</span> <span class="nf">some_method</span><span class="p">(</span><span class="n">array</span><span class="p">)</span>
+</span><span class='line'>  <span class="n">array</span><span class="o">.</span><span class="n">each</span> <span class="k">do</span> <span class="o">|</span><span class="n">elem</span><span class="o">|</span>
+</span><span class='line'>    <span class="k">yield</span><span class="p">(</span><span class="n">elem</span><span class="p">)</span>
+</span><span class='line'>  <span class="k">end</span>
+</span><span class='line'><span class="k">end</span>
+</span><span class='line'>
+</span><span class='line'><span class="n">some_method</span><span class="p">(</span><span class="o">[</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">3</span><span class="p">,</span><span class="mi">4</span><span class="o">]</span><span class="p">)</span> <span class="k">do</span> <span class="o">|</span><span class="n">elem</span><span class="o">|</span>
+</span><span class='line'>  <span class="nb">puts</span> <span class="p">(</span><span class="n">elem</span> <span class="o">*</span> <span class="mi">2</span><span class="p">)</span>
+</span><span class='line'><span class="k">end</span> <span class="c1">#-&gt; 2, 4, 6, 8</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>In this example we are actually passing two blocks into methods. This is almost like passing a function as an argument, except we define the whole function, and instead of calling it by name, it gets called when we use the <strong>yield</strong> keyword. It even has the coolest property of a closure, which is access to the scope in which it was defined.</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+</pre></td><td class='code'><pre><code class='ruby'><span class='line'><span class="n">x</span><span class="o">=</span> <span class="mi">10</span>
+</span><span class='line'>
+</span><span class='line'><span class="n">some_method</span><span class="p">(</span><span class="o">[</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">3</span><span class="p">,</span><span class="mi">4</span><span class="o">]</span><span class="p">)</span> <span class="k">do</span> <span class="o">|</span><span class="n">elem</span><span class="o">|</span>
+</span><span class='line'>  <span class="nb">puts</span> <span class="p">(</span><span class="n">elem</span> <span class="o">*</span> <span class="n">x</span><span class="p">)</span>
+</span><span class='line'><span class="k">end</span> <span class="c1">#-&gt; 10, 20, 30, 40</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>But there is one important difference, we have to write out the function, we still are not assigning it to a variable.</p>
+
+<p>However, there is a way we can do that!</p>
+
+<h2>Procs! Procs Everywhere!</h2>
+
+<p><img src="http://i.imgur.com/wJ0cIkO.jpg" alt="Procs Everywhere" /></p>
+
+<p>A Proc is how ruby wraps a function into an object, and best of all, they can be defined and saved to variables! This means that they can be called at will with the .call method.</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+</pre></td><td class='code'><pre><code class='ruby'><span class='line'>  <span class="k">def</span> <span class="nf">gen_exponential</span><span class="p">(</span><span class="n">factor</span><span class="p">)</span>
+</span><span class='line'>    <span class="k">return</span> <span class="no">Proc</span><span class="o">.</span><span class="n">new</span> <span class="k">do</span> <span class="o">|</span><span class="n">n</span><span class="o">|</span>
+</span><span class='line'>      <span class="n">sum</span> <span class="o">=</span> <span class="n">n</span>
+</span><span class='line'>      <span class="p">(</span><span class="n">factor</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">times</span> <span class="k">do</span>
+</span><span class='line'>        <span class="n">sum</span> <span class="o">*=</span> <span class="n">n</span>
+</span><span class='line'>      <span class="k">end</span>
+</span><span class='line'>      <span class="n">sum</span>
+</span><span class='line'>    <span class="k">end</span>
+</span><span class='line'>  <span class="k">end</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="n">cuber</span> <span class="o">=</span> <span class="n">gen_exponential</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
+</span><span class='line'>  <span class="n">cuber</span><span class="o">.</span><span class="n">call</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span> <span class="c1">#-&gt; 27</span>
+</span><span class='line'>  <span class="n">cuber</span><span class="o">.</span><span class="n">call</span><span class="p">(</span><span class="mi">4</span><span class="p">)</span> <span class="c1">#-&gt; 64</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>You can even pass that Proc back and forth into functions.</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+</pre></td><td class='code'><pre><code class='ruby'><span class='line'>  <span class="o">[</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">3</span><span class="p">,</span><span class="mi">4</span><span class="o">].</span><span class="n">map</span> <span class="k">do</span> <span class="o">|</span><span class="n">elem</span><span class="o">|</span>
+</span><span class='line'>    <span class="n">cuber</span><span class="o">.</span><span class="n">call</span><span class="p">(</span><span class="n">elem</span><span class="p">)</span>
+</span><span class='line'>  <span class="k">end</span> <span class="c1">#-&gt; [1,8,27,64]</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="k">def</span> <span class="nf">cool_map</span><span class="p">(</span><span class="n">array</span><span class="p">,</span> <span class="n">something_to_call</span><span class="p">)</span>
+</span><span class='line'>    <span class="n">new_array</span> <span class="o">=</span> <span class="o">[]</span>
+</span><span class='line'>    <span class="n">array</span><span class="o">.</span><span class="n">each</span> <span class="k">do</span> <span class="o">|</span><span class="n">elem</span><span class="o">|</span>
+</span><span class='line'>      <span class="n">new_array</span> <span class="o">&lt;&lt;</span> <span class="n">something_to_call</span><span class="o">.</span><span class="n">call</span><span class="p">(</span><span class="n">elem</span><span class="p">)</span>
+</span><span class='line'>    <span class="k">end</span>
+</span><span class='line'>    <span class="n">new_array</span>
+</span><span class='line'>  <span class="k">end</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="n">cool_map</span><span class="p">(</span><span class="o">[</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">3</span><span class="p">,</span><span class="mi">4</span><span class="o">]</span><span class="p">,</span> <span class="n">cuber</span><span class="p">)</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>So far so cool right?</p>
+
+<p>So quick recap, both blocks and procs allow you to pass code into other methods. BUT, procs are objects, and blocks are not. Procs can be passed into methods as arguments, and can be called with the .call(), and blocks can only be passed by writing the whole block out, they must be called with the yield function, and each method can only have one block.</p>
+
+<p>Now let&rsquo;s go deeper</p>
+
+<h2>How Many Procs could a Proc Block Proc if we use the Unary Operator?</h2>
+
+<p><img src="http://i2.photobucket.com/albums/y42/GilGrissomCSI/woodchuck.jpg" alt="BRING IT" /></p>
+
+<p>Let&rsquo;s take a look at this piece of code.</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+</pre></td><td class='code'><pre><code class='ruby'><span class='line'><span class="k">def</span> <span class="nf">some_method</span><span class="p">(</span><span class="o">&amp;</span><span class="n">block</span><span class="p">)</span>
+</span><span class='line'>  <span class="n">block</span><span class="o">.</span><span class="n">class</span>
+</span><span class='line'><span class="k">end</span>
+</span><span class='line'>
+</span><span class='line'><span class="n">some_method</span> <span class="k">do</span>
+</span><span class='line'>
+</span><span class='line'><span class="k">end</span> <span class="c1">#-&gt; Proc</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>The first thing you should know, is that the ampersand is also known as the unary operator, and it&rsquo;s a means of turning Blocks into Procs and visa versa. In the above example, it is used to turn the block into a proc, i.e. make it an object. Once it&rsquo;s an object, we can call object methods on it, and see that it is actually a proc. The unary also works in the opposite direction, turning procs into blocks which can then be passed into methods that need a block.</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+</pre></td><td class='code'><pre><code class='ruby'><span class='line'><span class="n">putstuff</span> <span class="o">=</span> <span class="no">Proc</span><span class="o">.</span><span class="n">new</span><span class="p">{</span><span class="o">|</span><span class="n">thing</span><span class="o">|</span> <span class="nb">puts</span> <span class="n">thing</span><span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">[</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">3</span><span class="p">,</span><span class="mi">4</span><span class="o">].</span><span class="n">each</span> <span class="o">&amp;</span><span class="n">putstuff</span> <span class="c1">#-&gt; 1,2,3,4</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>This allows us to save methods in variables and pass them into blocks with relative ease.  But there is one more step to consider when looking at how</p>
+
+<h2>Mary had a little Lambda</h2>
+
+<p><img src="http://www.tumblr.com/likes/page/10" alt="Soon" /></p>
+
+<p>Now there is one more way in which Ruby supports first class functions: lambdas. Lambdas are actually a lot like procs, but almost a different &ldquo;flavor&rdquo;. They can be passed back and forth, and are called similarly to lambdas, but they are declared slightly differently, and have a few other important differences.</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+</pre></td><td class='code'><pre><code class='ruby'><span class='line'><span class="n">proc_town</span> <span class="o">=</span> <span class="no">Proc</span><span class="o">.</span><span class="n">new</span> <span class="p">{}</span>
+</span><span class='line'><span class="n">lambda_ville</span> <span class="o">=</span> <span class="nb">lambda</span> <span class="p">{}</span>
+</span><span class='line'>
+</span><span class='line'><span class="c1">#they are the same class</span>
+</span><span class='line'><span class="n">proc_town</span><span class="o">.</span><span class="n">class</span> <span class="c1">#-&gt; Proc</span>
+</span><span class='line'><span class="n">lambda_ville</span><span class="o">.</span><span class="n">class</span> <span class="c1">#-&gt; Proc</span>
+</span><span class='line'>
+</span><span class='line'><span class="c1">#but if you look closer</span>
+</span><span class='line'><span class="n">proc_town</span> <span class="c1">#-&gt; &lt;Proc:0x007ff4b3d47510@(irb):59&gt;</span>
+</span><span class='line'><span class="n">lambda_ville</span> <span class="c1">#-&gt; &lt;Proc:0x007ff4b3d37660@(irb):60 (lambda)&gt;</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>There are two other key differences, which very much affect the way these are used.</p>
+
+<h3>Arity Checking</h3>
+
+<p>As we&rsquo;ve seen with Javascript, sometimes languages do not care about whether the number of arguments you pass to a function match the number of arguments that function takes.</p>
+
+<p>Procs will not throw an argument error if they are passed a varying number of arguments, while Lambdas do enforce argument strictness (or in other words, they arity check). This makes procs a little dangerous, only in the sense that they will fail silently if you mess something up (like Javascript), but they are also more flexible.</p>
+
+<h3>Return of the Lambda</h3>
+
+<p>Procs and Lambdas differ in the way that they return values to where they are called. A Proc does not create it&rsquo;s own &ldquo;return scope&rdquo;, meaning it almost becomes a part of the function that calls it. So if a Proc triggers the return keyword, it will short-circuit the rest of the method that called it.</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+</pre></td><td class='code'><pre><code class='ruby'><span class='line'><span class="k">def</span> <span class="nf">messing_with_procs</span>
+</span><span class='line'>  <span class="n">foo</span> <span class="o">=</span> <span class="no">Proc</span><span class="o">.</span><span class="n">new</span> <span class="p">{</span><span class="k">return</span> <span class="s2">&quot;&#39;nothing&#39; is wrong!&quot;</span><span class="p">}</span>
+</span><span class='line'>  <span class="n">foo</span><span class="o">.</span><span class="n">call</span>
+</span><span class='line'>  <span class="nb">puts</span> <span class="s2">&quot;Sometimes Proc&#39;s fail silently&quot;</span>
+</span><span class='line'><span class="k">end</span>
+</span><span class='line'>
+</span><span class='line'><span class="nb">puts</span> <span class="n">messing_with_procs</span> <span class="c1">#-&gt; &quot;&#39;nothing&#39; is wrong!&quot;</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Lambdas are different, they almost create their own return scope, so if a lambda triggers the return keyword, it will exit the lambda code, but return to the method that called it.</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+</pre></td><td class='code'><pre><code class='ruby'><span class='line'><span class="k">def</span> <span class="nf">sweet_sweet_lambdas</span>
+</span><span class='line'>  <span class="n">bar</span> <span class="o">=</span> <span class="nb">lambda</span> <span class="p">{</span><span class="k">return</span> <span class="s2">&quot;Actually nothing is wrong&quot;</span><span class="p">}</span>
+</span><span class='line'>  <span class="nb">puts</span> <span class="n">bar</span><span class="o">.</span><span class="n">call</span> <span class="o">+</span> <span class="s2">&quot;because lambdas are so so sweet&quot;</span>
+</span><span class='line'><span class="k">end</span>
+</span><span class='line'>
+</span><span class='line'><span class="nb">puts</span> <span class="n">sweet_sweet_lambdas</span> <span class="c1">#-&gt; &quot;Actually nothing is wrong because lambdas are so so sweet&quot;</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<h2>Recap</h2>
+
+<p>So let&rsquo;s recap, one of the cooler things about Javascript is that it supports First-class functions, which means passing functions to functions and having them return other functions (some of which also take and return functions). FUNCTIONS. Being passed back and forth. Forever.
+<img src="http://i.imgur.com/e7RHh2a.jpg" alt="Yo Dawg" /></p>
+
+<p>Turns out, ruby ain&rsquo;t no slouch. Though the traditional method of passing code to functions through blocks is pretty limited, we still have the options of procs and lambdas, which give ruby true support for First-class functions.</p>
+
+<h2>Resources</h2>
+
+<p>I took a lot of things from people smarter than I, here they are:
+<a href="http://www.sitepoint.com/functional-programming-techniques-with-ruby-part-ii/">Functional Programming Techniques With Ruby: Part II</a>
+<a href="http://javascriptissexy.com/javascript-apply-call-and-bind-methods-are-essential-for-javascript-professionals/">JavaScript’s Apply, Call, and Bind Methods are Essential for JavaScript Professionals</a>
+<a href="https://rubymonk.com/learning/books/4-ruby-primer-ascent/chapters/18-blocks/lessons/64-blocks-procs-lambdas">Ruby Monk on Blocks Procs and Lambdas</a>
+<a href="http://awaxman11.github.io/blog/2013/08/05/what-is-the-difference-between-a-block/">What Is the Difference Between a Block, a Proc, and a Lambda in Ruby? (I actually think this is a former flatiron blog)</a></p>
+</div>
+
+
+  <footer>
+    <p class="meta">
+      
+  
+
+<span class="byline author vcard">Posted by <span class="fn">Adam May</span></span>
+
+      
+
+
+
+
+<time class='entry-date' datetime='2016-01-25T14:20:12-05:00'><span class='date'><span class='date-month'>Jan</span> <span class='date-day'>25</span><span class='date-suffix'>th</span>, <span class='date-year'>2016</span></span> <span class='time'>2:20 pm</span></time>
+      
+
+
+    </p>
+    
+      <div class="sharing">
+  
+  <a href="//twitter.com/share" class="twitter-share-button" data-url="http://aemrox.github.io/blog/2016/01/25/ruby-fied-javascript-first-class-functions/" data-via="" data-counturl="http://aemrox.github.io/blog/2016/01/25/ruby-fied-javascript-first-class-functions/" >Tweet</a>
+  
+  
+  
+</div>
+
+    
+    <p class="meta">
+      
+        <a class="basic-alignment left" href="/blog/2016/01/25/ruby-fied-javascript-currying/" title="Previous Post: Ruby-fied Javascript Part II: Currying">&laquo; Ruby-fied Javascript Part II: Currying</a>
+      
+      
+    </p>
+  </footer>
+</article>
+
+</div>
+
+<aside class="sidebar">
+  
+    <section>
+  <h1>Recent Posts</h1>
+  <ul id="recent_posts">
+    
+      <li class="post">
+        <a href="/blog/2016/01/25/ruby-fied-javascript-first-class-functions/">Ruby-fied Javascript Part I: First Class Functions</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2016/01/25/ruby-fied-javascript-currying/">Ruby-fied Javascript Part II: Currying</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2016/01/04/deploying-to-heroku/">Deploying Sinatra to Heroku, or How I Learned to Stop Worrying and Love Postgres</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2015/12/08/the-wonderful-world-of-regex/">The Wonderful World of Regex</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2015/12/02/my-first-post-on-octopress/">My First Post on Octopress</a>
+      </li>
+    
+  </ul>
+</section>
+
+
+
+
+
+  
+</aside>
+
+
+    </div>
+  </div>
+  <footer role="contentinfo"><p>
+  Copyright &copy; 2016 - Adam May -
+  <span class="credit">Powered by <a href="http://octopress.org">Octopress</a></span>
+</p>
+
+</footer>
+  
+
+
+
+
+
+
+
+  <script type="text/javascript">
+    (function(){
+      var twitterWidgets = document.createElement('script');
+      twitterWidgets.type = 'text/javascript';
+      twitterWidgets.async = true;
+      twitterWidgets.src = '//platform.twitter.com/widgets.js';
+      document.getElementsByTagName('head')[0].appendChild(twitterWidgets);
+    })();
+  </script>
+
+
+
+
+
+</body>
+</html>
