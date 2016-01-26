@@ -34,7 +34,7 @@ var thisHoldsAFunction = theOneWeCall(theOneWePass); // logs "This is from the f
 thisHoldsAFunction(); //->"and this is the function that was passed back"
 ```
 
-While strictly speaking, ruby does not support First-class Functions. Methods cannot be return values or held in variables. But methods are far from all Ruby uses to implement functions. And some of these functions have Javascript-y super powers.
+Strictly speaking, ruby does not support First-class Functions. Methods cannot be return values or held in variables. But methods are far from all Ruby uses to implement functions. And some of these functions have Javascript-y super powers.
 
 ##Blocks and Yield
 Nearly anyone who has touched Ruby is probably familiar with a block. It allows us to customize methods by passing in custom instructions that are executed somewhere within the method, using the **yield** keyword.
@@ -101,7 +101,7 @@ You can even pass that Proc back and forth into functions.
     new_array
   end
 
-  cool_map([1,2,3,4], cuber)
+  cool_map([1,2,3,4], cuber)#-> [1,8,27,64]
 ```
 
 So far so cool right?
@@ -155,12 +155,12 @@ lambda_ville #-> <Proc:0x007ff4b3d37660@(irb):60 (lambda)>
 ```
 There are two other key differences, which very much affect the way these are used.
 
-###Arity Checking
+#####Arity Checking
 As we've seen with Javascript, sometimes languages do not care about whether the number of arguments you pass to a function match the number of arguments that function takes.
 
 Procs will not throw an argument error if they are passed a varying number of arguments, while Lambdas do enforce argument strictness (or in other words, they arity check). This makes procs a little dangerous, only in the sense that they will fail silently if you mess something up (like Javascript), but they are also more flexible.
 
-###Return of the Lambda
+#####Return of the Lambda
 Procs and Lambdas differ in the way that they return values to where they are called. A Proc does not create it's own "return scope", meaning it almost becomes a part of the function that calls it. So if a Proc triggers the return keyword, it will short-circuit the rest of the method that called it.
 
 ```ruby
