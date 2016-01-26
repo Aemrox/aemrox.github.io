@@ -110,7 +110,7 @@ So quick recap, both blocks and procs allow you to pass code into other methods.
 
 Now let's go deeper
 
-## How Many Procs could a Block Proc Chop if we use the Unary Operator?
+## How Many Procs could a Proc Block Proc if we use the Unary Operator?
 
 ![BRING IT](http://i2.photobucket.com/albums/y42/GilGrissomCSI/woodchuck.jpg)
 
