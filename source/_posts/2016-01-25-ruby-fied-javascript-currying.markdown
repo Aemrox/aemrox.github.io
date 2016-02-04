@@ -21,7 +21,7 @@ Javascript has three separate methods that all allow you to bend functions to yo
 ####The Ties that Bind()
 ![bad bondage pun](https://s-media-cache-ak0.pinimg.com/736x/d9/83/28/d983287bb6e589eea0511f1c09288ef0.jpg)
 
-Chances are, you've actually seen a good amount of the function .bind(), it's a very common way to deal with the "this" problem in Javascript. In short, .bind() allows you to dictate what this" will refer to inside the function at the time the function is called. From this property alone, you can probably guess how this will allow us to start borrowing functions.
+Chances are, you've actually seen a good amount of the function .bind(), it's a very common way to deal with the "this" problem in Javascript. In short, .bind() allows you to dictate what "this" will refer to inside the function at the time the function is called. From this property alone, you can probably guess how this will allow us to start borrowing functions.
 
 When functions are written vaguely enough, operating on objects using primarily the "this" keyword, they become fairly easy to bend. Let's take a look at an example:
 
@@ -37,7 +37,7 @@ function Widgets(name, quantity, price) {
 }
 ```
 
-In the function constructor we just defined, we managed to design the function costOfInventory so that it does not take any arguments, and only operates on functions attached to an object, referred to as this. Now we can use this function to refer to any object that has similar structure. For instance:
+In the function constructor we just defined, we managed to design the function costOfInventory so that it does not take any arguments, and only operates on properties attached to an object, referred to as this. Now we can use this function to refer to any object that has similar structure. For instance:
 
 ```Javascript
 var wonkyWicket = {
@@ -75,7 +75,7 @@ One important thing to note that will persist with us is that it's not as simple
 ####I'm Call()in' you Out, Apply() Yourself!
 The last two methods we are going to go over are .call() and .apply().
 
-Truth be told these functions are very similar to .bind() but there are a few key differences. Let's start with the differences between .bind() and .call().
+Truth be told, these functions are very similar to .bind() but there are a few key differences. Let's start with the differences between .bind() and .call().
 
 ```Javascript
 function saySomething(name){
@@ -92,7 +92,7 @@ saySomething.call(hello, "Duckie") //-> "HALLO Duckie, you old dog you!"
 supChip() //-> "HALLO chip, you old dog you!"
 ```
 
-Here we begin to see the difference between these two very similar methods. They both set this with their first argument and set subsequent arguments in the method with their next parameters. However, .bind() returns a new function, whereas .call() immediately evaluates the function it's called on with it's special parameters.
+Here we begin to see the difference between these two very similar methods. They both set "this" with their first argument and set subsequent arguments in the method with their next parameters. However, .bind() returns a new function, whereas .call() immediately evaluates the function it's called on with it's special parameters.
 
 .apply() is more similar to .call() than .bind(). In fact, the only difference is in the way .apply() is called.
 
@@ -149,11 +149,12 @@ I won't delve too far into Module functionality, since it's pretty well covered,
 ####Call me Ruby?
 ![This is dog](http://weknowmemes.com/wp-content/uploads/2012/05/hello-maybe-this-is-dog.jpg)
 
-Turns out that Ruby has it's own version of .call() and unsurprisingly it's strongly related to the Proc class. Any proc accepts a message of .call as a command to run the code inside the proc, so simply put, it's a way of running a proc. Given that Procs don't arity check (unless they are lambdas), this can be used to replicate some of the usefulness of .call() or .apply(). However, as of Ruby 1.9.3 there is one  more useful function.
+Turns out that Ruby has it's own version of .call() and unsurprisingly it's strongly related to the Proc class. Any proc accepts a message of .call as a command to run the code inside the proc, so simply put, it's a way of running a proc. Given that Procs don't arity check (unless they are lambdas), this can be used to replicate some of the usefulness of .call() or .apply(). However, as of Ruby 1.9.3 there is one slightly more useful function.
+
 ####Keep Calm and Curry On
 ![Curry Puns LOLZ](http://bircurries.co.uk/forum/download/file.php?id=1067&t=1)
 
-Ruby gained full partial function application when it added the .curry function. In 1.9.3 .curry could be called on any proc or lambda and it would return a new proc or lambda that had one of it's arguments set with a specific parameter. If this functionality is still a bit fuzzy, ponder the following code.
+Ruby gained full partial function application support when it added the .curry function. In 1.9.3 .curry could be called on any proc or lambda and it would return a new proc or lambda that had one of it's arguments set with a specific parameter. If this functionality is still a bit fuzzy, ponder the following code.
 
 ```ruby
 do_math = lambda do |operator, x, y|
@@ -182,12 +183,12 @@ increment = add.curry(1)
 increment.(100) #-> 101
 ```
 
-As you can see, the potential here to dry up code is enormous. If one design their functions properly, one function is powerful enough to write plenty. However, the key work is "design", it takes a lot of planning or refactoring in order to achieve this next level DRYness.
+As you can see, the potential here to dry up code is enormous. If one designs their functions properly, one function is powerful enough to write plenty. However, the key word is "design", it takes a lot of planning or refactoring in order to achieve this next level DRYness.
 
 ![So Dry](http://img.pandawhale.com/post-58159-Im-gonna-make-it-so-dry-for-yo-6Yyj.gif)
 
 ####Final Note
-As of Ruby 2.2.0 there is now a way to call curry on any method or block (instead of just on procs and lambdas). It looks something like this:
+As of Ruby 2.2.0 there is now a way to call curry on any method (instead of just on procs and lambdas). It looks something like this:
 
 ```ruby
 def say_hi(name)
