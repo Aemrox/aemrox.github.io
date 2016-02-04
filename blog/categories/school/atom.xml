@@ -4,7 +4,7 @@
   <title><![CDATA[Category: School | Ride or Pry]]></title>
   <link href="http://aemrox.github.io/blog/categories/school/atom.xml" rel="self"/>
   <link href="http://aemrox.github.io/"/>
-  <updated>2016-02-03T23:23:42-05:00</updated>
+  <updated>2016-02-03T23:31:05-05:00</updated>
   <id>http://aemrox.github.io/</id>
   <author>
     <name><![CDATA[Adam May]]></name>
@@ -34,7 +34,7 @@
 
 <p><img src="https://s-media-cache-ak0.pinimg.com/736x/d9/83/28/d983287bb6e589eea0511f1c09288ef0.jpg" alt="bad bondage pun" /></p>
 
-<p>Chances are, you&rsquo;ve actually seen a good amount of the function .bind(), it&rsquo;s a very common way to deal with the &ldquo;this&rdquo; problem in Javascript. In short, .bind() allows you to dictate what this" will refer to inside the function at the time the function is called. From this property alone, you can probably guess how this will allow us to start borrowing functions.</p>
+<p>Chances are, you&rsquo;ve actually seen a good amount of the function .bind(), it&rsquo;s a very common way to deal with the &ldquo;this&rdquo; problem in Javascript. In short, .bind() allows you to dictate what &ldquo;this&rdquo; will refer to inside the function at the time the function is called. From this property alone, you can probably guess how this will allow us to start borrowing functions.</p>
 
 <p>When functions are written vaguely enough, operating on objects using primarily the &ldquo;this&rdquo; keyword, they become fairly easy to bend. Let&rsquo;s take a look at an example:</p>
 
@@ -49,7 +49,7 @@
 }
 </code></pre>
 
-<p>In the function constructor we just defined, we managed to design the function costOfInventory so that it does not take any arguments, and only operates on functions attached to an object, referred to as this. Now we can use this function to refer to any object that has similar structure. For instance:</p>
+<p>In the function constructor we just defined, we managed to design the function costOfInventory so that it does not take any arguments, and only operates on properties attached to an object, referred to as this. Now we can use this function to refer to any object that has similar structure. For instance:</p>
 
 <pre><code class="Javascript">var wonkyWicket = {
   name: "Wonky Wickets",
@@ -85,7 +85,7 @@ Widgets.costOfInventory().bind(fakeItem, "Something AWESOME") // -&gt; "The cost
 
 <p>The last two methods we are going to go over are .call() and .apply().</p>
 
-<p>Truth be told these functions are very similar to .bind() but there are a few key differences. Let&rsquo;s start with the differences between .bind() and .call().</p>
+<p>Truth be told, these functions are very similar to .bind() but there are a few key differences. Let&rsquo;s start with the differences between .bind() and .call().</p>
 
 <pre><code class="Javascript">function saySomething(name){
   return this.greeting + name + ", you old dog you!"
@@ -101,7 +101,7 @@ saySomething.call(hello, "Duckie") //-&gt; "HALLO Duckie, you old dog you!"
 supChip() //-&gt; "HALLO chip, you old dog you!"
 </code></pre>
 
-<p>Here we begin to see the difference between these two very similar methods. They both set this with their first argument and set subsequent arguments in the method with their next parameters. However, .bind() returns a new function, whereas .call() immediately evaluates the function it&rsquo;s called on with it&rsquo;s special parameters.</p>
+<p>Here we begin to see the difference between these two very similar methods. They both set &ldquo;this&rdquo; with their first argument and set subsequent arguments in the method with their next parameters. However, .bind() returns a new function, whereas .call() immediately evaluates the function it&rsquo;s called on with it&rsquo;s special parameters.</p>
 
 <p>.apply() is more similar to .call() than .bind(). In fact, the only difference is in the way .apply() is called.</p>
 
@@ -159,13 +159,13 @@ end
 
 <p><img src="http://weknowmemes.com/wp-content/uploads/2012/05/hello-maybe-this-is-dog.jpg" alt="This is dog" /></p>
 
-<p>Turns out that Ruby has it&rsquo;s own version of .call() and unsurprisingly it&rsquo;s strongly related to the Proc class. Any proc accepts a message of .call as a command to run the code inside the proc, so simply put, it&rsquo;s a way of running a proc. Given that Procs don&rsquo;t arity check (unless they are lambdas), this can be used to replicate some of the usefulness of .call() or .apply(). However, as of Ruby 1.9.3 there is one  more useful function.</p>
+<p>Turns out that Ruby has it&rsquo;s own version of .call() and unsurprisingly it&rsquo;s strongly related to the Proc class. Any proc accepts a message of .call as a command to run the code inside the proc, so simply put, it&rsquo;s a way of running a proc. Given that Procs don&rsquo;t arity check (unless they are lambdas), this can be used to replicate some of the usefulness of .call() or .apply(). However, as of Ruby 1.9.3 there is one slightly more useful function.</p>
 
 <h4>Keep Calm and Curry On</h4>
 
 <p><img src="http://bircurries.co.uk/forum/download/file.php?id=1067&amp;t=1" alt="Curry Puns LOLZ" /></p>
 
-<p>Ruby gained full partial function application when it added the .curry function. In 1.9.3 .curry could be called on any proc or lambda and it would return a new proc or lambda that had one of it&rsquo;s arguments set with a specific parameter. If this functionality is still a bit fuzzy, ponder the following code.</p>
+<p>Ruby gained full partial function application support when it added the .curry function. In 1.9.3 .curry could be called on any proc or lambda and it would return a new proc or lambda that had one of it&rsquo;s arguments set with a specific parameter. If this functionality is still a bit fuzzy, ponder the following code.</p>
 
 <pre><code class="ruby">do_math = lambda do |operator, x, y|
   a.send(operator, b)
@@ -193,13 +193,13 @@ subtract.(12,9) #-&gt; 3
 increment.(100) #-&gt; 101
 </code></pre>
 
-<p>As you can see, the potential here to dry up code is enormous. If one design their functions properly, one function is powerful enough to write plenty. However, the key work is &ldquo;design&rdquo;, it takes a lot of planning or refactoring in order to achieve this next level DRYness.</p>
+<p>As you can see, the potential here to dry up code is enormous. If one designs their functions properly, one function is powerful enough to write plenty. However, the key word is &ldquo;design&rdquo;, it takes a lot of planning or refactoring in order to achieve this next level DRYness.</p>
 
 <p><img src="http://img.pandawhale.com/post-58159-Im-gonna-make-it-so-dry-for-yo-6Yyj.gif" alt="So Dry" /></p>
 
 <h4>Final Note</h4>
 
-<p>As of Ruby 2.2.0 there is now a way to call curry on any method or block (instead of just on procs and lambdas). It looks something like this:</p>
+<p>As of Ruby 2.2.0 there is now a way to call curry on any method (instead of just on procs and lambdas). It looks something like this:</p>
 
 <pre><code class="ruby">def say_hi(name)
   "Hi #{name}"
