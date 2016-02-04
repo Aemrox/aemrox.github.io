@@ -112,10 +112,12 @@ As you can see, the arguments passed through .apply() must be passed in an array
 
 ##A Ruby in the Rough
 ![Ruby is rough](http://kardsunlimited.com/wp-content/uploads/2013/06/tumblr_lounw0Da7r1qi6sy1o1_500.png)
+
 As we've spoken about before, Ruby can play functional with the big dogs, and as it's evolved as a language, it's gained even more functional properties. We're going to explore a few ways of replicating this awesome functionality from Javascript.
 
 ####Waddya Mean Modules?!
 ![What if I told you?](http://blog.wassill.eu/sites/default/files/styles/adaptive/public/sfkuxr4.png?itok=FUXr3pHL)
+
 The first method of sharing methods between classes is one we are all pretty familiar with. A Module is a different type of object that can mix methods into another class. Much like binding this to a function, the Module and Class need to share certain functionality to begin with.
 
 ```ruby
@@ -146,9 +148,11 @@ I won't delve too far into Module functionality, since it's pretty well covered,
 
 ####Call me Ruby?
 ![This is dog](http://weknowmemes.com/wp-content/uploads/2012/05/hello-maybe-this-is-dog.jpg)
+
 Turns out that Ruby has it's own version of .call() and unsurprisingly it's strongly related to the Proc class. Any proc accepts a message of .call as a command to run the code inside the proc, so simply put, it's a way of running a proc. Given that Procs don't arity check (unless they are lambdas), this can be used to replicate some of the usefulness of .call() or .apply(). However, as of Ruby 1.9.3 there is one  more useful function.
 ####Keep Calm and Curry On
 ![Curry Puns LOLZ](http://bircurries.co.uk/forum/download/file.php?id=1067&t=1)
+
 Ruby gained full partial function application when it added the .curry function. In 1.9.3 .curry could be called on any proc or lambda and it would return a new proc or lambda that had one of it's arguments set with a specific parameter. If this functionality is still a bit fuzzy, ponder the following code.
 
 ```ruby
