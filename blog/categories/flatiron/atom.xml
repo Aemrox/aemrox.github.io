@@ -4,7 +4,7 @@
   <title><![CDATA[Category: Flatiron | Ride or Pry]]></title>
   <link href="http://aemrox.github.io/blog/categories/flatiron/atom.xml" rel="self"/>
   <link href="http://aemrox.github.io/"/>
-  <updated>2016-02-03T23:22:01-05:00</updated>
+  <updated>2016-02-03T23:23:42-05:00</updated>
   <id>http://aemrox.github.io/</id>
   <author>
     <name><![CDATA[Adam May]]></name>
@@ -121,13 +121,15 @@ saySomethingElse.apply(intro, ["Benny","Burgundy","Belize"]) //-&gt; YOU GUYS I'
 
 <h2>A Ruby in the Rough</h2>
 
-<p><img src="http://kardsunlimited.com/wp-content/uploads/2013/06/tumblr_lounw0Da7r1qi6sy1o1_500.png" alt="Ruby is rough" />
-As we&rsquo;ve spoken about before, Ruby can play functional with the big dogs, and as it&rsquo;s evolved as a language, it&rsquo;s gained even more functional properties. We&rsquo;re going to explore a few ways of replicating this awesome functionality from Javascript.</p>
+<p><img src="http://kardsunlimited.com/wp-content/uploads/2013/06/tumblr_lounw0Da7r1qi6sy1o1_500.png" alt="Ruby is rough" /></p>
+
+<p>As we&rsquo;ve spoken about before, Ruby can play functional with the big dogs, and as it&rsquo;s evolved as a language, it&rsquo;s gained even more functional properties. We&rsquo;re going to explore a few ways of replicating this awesome functionality from Javascript.</p>
 
 <h4>Waddya Mean Modules?!</h4>
 
-<p><img src="http://blog.wassill.eu/sites/default/files/styles/adaptive/public/sfkuxr4.png?itok=FUXr3pHL" alt="What if I told you?" />
-The first method of sharing methods between classes is one we are all pretty familiar with. A Module is a different type of object that can mix methods into another class. Much like binding this to a function, the Module and Class need to share certain functionality to begin with.</p>
+<p><img src="http://blog.wassill.eu/sites/default/files/styles/adaptive/public/sfkuxr4.png?itok=FUXr3pHL" alt="What if I told you?" /></p>
+
+<p>The first method of sharing methods between classes is one we are all pretty familiar with. A Module is a different type of object that can mix methods into another class. Much like binding this to a function, the Module and Class need to share certain functionality to begin with.</p>
 
 <pre><code class="ruby">module Greetable
   def say_hi
@@ -155,13 +157,15 @@ end
 
 <h4>Call me Ruby?</h4>
 
-<p><img src="http://weknowmemes.com/wp-content/uploads/2012/05/hello-maybe-this-is-dog.jpg" alt="This is dog" />
-Turns out that Ruby has it&rsquo;s own version of .call() and unsurprisingly it&rsquo;s strongly related to the Proc class. Any proc accepts a message of .call as a command to run the code inside the proc, so simply put, it&rsquo;s a way of running a proc. Given that Procs don&rsquo;t arity check (unless they are lambdas), this can be used to replicate some of the usefulness of .call() or .apply(). However, as of Ruby 1.9.3 there is one  more useful function.</p>
+<p><img src="http://weknowmemes.com/wp-content/uploads/2012/05/hello-maybe-this-is-dog.jpg" alt="This is dog" /></p>
+
+<p>Turns out that Ruby has it&rsquo;s own version of .call() and unsurprisingly it&rsquo;s strongly related to the Proc class. Any proc accepts a message of .call as a command to run the code inside the proc, so simply put, it&rsquo;s a way of running a proc. Given that Procs don&rsquo;t arity check (unless they are lambdas), this can be used to replicate some of the usefulness of .call() or .apply(). However, as of Ruby 1.9.3 there is one  more useful function.</p>
 
 <h4>Keep Calm and Curry On</h4>
 
-<p><img src="http://bircurries.co.uk/forum/download/file.php?id=1067&amp;t=1" alt="Curry Puns LOLZ" />
-Ruby gained full partial function application when it added the .curry function. In 1.9.3 .curry could be called on any proc or lambda and it would return a new proc or lambda that had one of it&rsquo;s arguments set with a specific parameter. If this functionality is still a bit fuzzy, ponder the following code.</p>
+<p><img src="http://bircurries.co.uk/forum/download/file.php?id=1067&amp;t=1" alt="Curry Puns LOLZ" /></p>
+
+<p>Ruby gained full partial function application when it added the .curry function. In 1.9.3 .curry could be called on any proc or lambda and it would return a new proc or lambda that had one of it&rsquo;s arguments set with a specific parameter. If this functionality is still a bit fuzzy, ponder the following code.</p>
 
 <pre><code class="ruby">do_math = lambda do |operator, x, y|
   a.send(operator, b)
