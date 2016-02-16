@@ -1,0 +1,13 @@
+<div class="highlight"><pre><span class="kd">function</span> <span class="nx">saySomething</span><span class="p">(</span><span class="nx">name</span><span class="p">){</span>
+  <span class="k">return</span> <span class="k">this</span><span class="p">.</span><span class="nx">greeting</span> <span class="o">+</span> <span class="nx">name</span> <span class="o">+</span> <span class="s2">&quot;, you old dog you!&quot;</span>
+<span class="p">}</span>
+
+<span class="kd">var</span> <span class="nx">hello</span> <span class="o">=</span> <span class="p">{</span>
+  <span class="nx">greeting</span><span class="o">:</span> <span class="s2">&quot;HALLO &quot;</span>
+<span class="p">}</span>
+
+<span class="kd">var</span> <span class="nx">supChip</span> <span class="o">=</span> <span class="nx">saySomething</span><span class="p">.</span><span class="nx">bind</span><span class="p">(</span><span class="nx">hello</span><span class="p">,</span> <span class="s2">&quot;Chip&quot;</span><span class="p">)</span>
+
+<span class="nx">saySomething</span><span class="p">.</span><span class="nx">call</span><span class="p">(</span><span class="nx">hello</span><span class="p">,</span> <span class="s2">&quot;Duckie&quot;</span><span class="p">)</span> <span class="c1">//-&gt; &quot;HALLO Duckie, you old dog you!&quot;</span>
+<span class="nx">supChip</span><span class="p">()</span> <span class="c1">//-&gt; &quot;HALLO chip, you old dog you!&quot;</span>
+</pre></div>

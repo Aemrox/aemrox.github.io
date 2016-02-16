@@ -1,0 +1,7 @@
+<div class="highlight"><pre><span class="kd">var</span> <span class="nx">pusher</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Pusher</span><span class="p">(</span><span class="nx">$</span><span class="p">(</span><span class="s1">&#39;#chat&#39;</span><span class="p">).</span><span class="nx">data</span><span class="p">().</span><span class="nx">apiKey</span><span class="p">,</span> <span class="p">{</span>
+          <span class="nx">authEndpoint</span><span class="o">:</span> <span class="s1">&#39;/pusher/auth&#39;</span><span class="p">,</span>
+          <span class="nx">auth</span><span class="o">:</span> <span class="p">{</span>
+            <span class="nx">params</span><span class="o">:</span> <span class="nx">currentUser</span>
+          <span class="p">}</span>
+        <span class="p">});</span>
+</pre></div>

@@ -1,0 +1,10 @@
+<div class="highlight"><pre><span class="kd">var</span> <span class="nx">peers</span> <span class="o">=</span> <span class="p">{};</span>
+<span class="kd">function</span> <span class="nx">lookForPeers</span><span class="p">()</span> <span class="p">{</span>
+  <span class="k">for</span> <span class="p">(</span><span class="kd">var</span> <span class="nx">userId</span> <span class="k">in</span> <span class="nx">channel</span><span class="p">.</span><span class="nx">members</span><span class="p">.</span><span class="nx">members</span><span class="p">)</span> <span class="p">{</span>
+    <span class="k">if</span> <span class="p">(</span><span class="nx">userId</span> <span class="o">!=</span> <span class="nx">currentUser</span><span class="p">.</span><span class="nx">id</span><span class="p">)</span> <span class="p">{</span>
+      <span class="kd">var</span> <span class="nx">member</span> <span class="o">=</span> <span class="nx">channel</span><span class="p">.</span><span class="nx">members</span><span class="p">.</span><span class="nx">members</span><span class="p">[</span><span class="nx">userId</span><span class="p">];</span>
+
+      <span class="nx">peers</span><span class="p">[</span><span class="nx">userId</span><span class="p">]</span> <span class="o">=</span> <span class="nx">initiateConnection</span><span class="p">(</span><span class="nx">userId</span><span class="p">,</span> <span class="nx">member</span><span class="p">.</span><span class="nx">name</span><span class="p">);</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+</pre></div>

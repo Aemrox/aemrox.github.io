@@ -1,0 +1,8 @@
+<div class="highlight"><pre><span class="n">add</span> <span class="o">=</span> <span class="n">do_math</span><span class="o">.</span><span class="n">curry</span><span class="p">(</span><span class="ss">:+</span><span class="p">)</span>
+<span class="n">add</span><span class="o">.</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span><span class="mi">3</span><span class="p">)</span> <span class="c1">#-&gt; 5</span>
+<span class="n">add</span><span class="o">.</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span><span class="mi">5</span><span class="p">)</span> <span class="c1">#-&gt; 15</span>
+
+<span class="n">subtract</span> <span class="o">=</span> <span class="n">do_math</span><span class="o">.</span><span class="n">curry</span><span class="p">(</span><span class="ss">:-</span><span class="p">)</span>
+<span class="n">subtract</span><span class="o">.</span><span class="p">(</span><span class="mi">4</span><span class="p">,</span><span class="mi">2</span><span class="p">)</span> <span class="c1">#-&gt; 2</span>
+<span class="n">subtract</span><span class="o">.</span><span class="p">(</span><span class="mi">12</span><span class="p">,</span><span class="mi">9</span><span class="p">)</span> <span class="c1">#-&gt; 3</span>
+</pre></div>

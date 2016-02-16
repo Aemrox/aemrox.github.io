@@ -1,0 +1,11 @@
+<div class="highlight"><pre><span class="kd">function</span> <span class="nx">saySomethingElse</span><span class="p">(</span><span class="nx">name</span><span class="p">,</span> <span class="nx">color</span><span class="p">,</span> <span class="nx">location</span><span class="p">){</span>
+  <span class="k">return</span> <span class="k">this</span><span class="p">.</span><span class="nx">introduction</span> <span class="o">+</span> <span class="nx">name</span> <span class="o">+</span> <span class="s2">&quot;. My favorite color is &quot;</span> <span class="o">+</span> <span class="nx">color</span> <span class="o">+</span> <span class="s2">&quot; and I&#39;m from &quot;</span> <span class="o">+</span> <span class="nx">location</span>
+<span class="p">}</span>
+
+<span class="kd">var</span> <span class="nx">intro</span> <span class="o">=</span> <span class="p">{</span>
+  <span class="nx">introduction</span><span class="o">:</span> <span class="s2">&quot;YOU GUYZ I&#39;M &quot;</span>
+<span class="p">}</span>
+
+<span class="nx">saySomethingElse</span><span class="p">.</span><span class="nx">call</span><span class="p">(</span><span class="nx">intro</span><span class="p">,</span> <span class="s2">&quot;Adam&quot;</span><span class="p">,</span> <span class="s2">&quot;Aubergine&quot;</span><span class="p">,</span> <span class="s2">&quot;Austria&quot;</span><span class="p">)</span> <span class="c1">//-&gt; YOU GUYS I&#39;M Adam. My favorite color is Aubergine and I&#39;m from Austria</span>
+<span class="nx">saySomethingElse</span><span class="p">.</span><span class="nx">apply</span><span class="p">(</span><span class="nx">intro</span><span class="p">,</span> <span class="p">[</span><span class="s2">&quot;Benny&quot;</span><span class="p">,</span><span class="s2">&quot;Burgundy&quot;</span><span class="p">,</span><span class="s2">&quot;Belize&quot;</span><span class="p">])</span> <span class="c1">//-&gt; YOU GUYS I&#39;M Benny. My favorite color is Burgundy and I&#39;m from Belize</span>
+</pre></div>

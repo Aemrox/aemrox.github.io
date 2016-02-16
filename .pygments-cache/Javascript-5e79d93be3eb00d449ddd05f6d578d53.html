@@ -1,0 +1,14 @@
+<div class="highlight"><pre><span class="kd">function</span> <span class="nx">theOneWePass</span><span class="p">(){</span>
+  <span class="k">return</span> <span class="s2">&quot;This is from the function passed in&quot;</span><span class="p">;</span>
+<span class="p">}</span>
+
+<span class="kd">function</span> <span class="nx">theOneWeCall</span><span class="p">(</span><span class="nx">theOneWePass</span><span class="p">){</span>
+  <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">theOneWePass</span><span class="p">());</span>
+  <span class="k">return</span> <span class="kd">function</span><span class="p">(){</span>
+    <span class="k">return</span> <span class="s2">&quot;and this is the function that was passed back&quot;</span><span class="p">;</span>
+  <span class="p">};</span>
+<span class="p">}</span>
+
+<span class="kd">var</span> <span class="nx">thisHoldsAFunction</span> <span class="o">=</span> <span class="nx">theOneWeCall</span><span class="p">(</span><span class="nx">theOneWePass</span><span class="p">);</span> <span class="c1">// logs &quot;This is from the function passed in&quot;</span>
+<span class="nx">thisHoldsAFunction</span><span class="p">();</span> <span class="c1">//-&gt;&quot;and this is the function that was passed back&quot;</span>
+</pre></div>

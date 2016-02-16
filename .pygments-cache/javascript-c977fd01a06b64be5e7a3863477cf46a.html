@@ -1,0 +1,13 @@
+<div class="highlight"><pre><span class="nx">channel</span><span class="p">.</span><span class="nx">bind</span><span class="p">(</span><span class="s1">&#39;client-signal-&#39;</span> <span class="o">+</span> <span class="nx">currentUser</span><span class="p">.</span><span class="nx">id</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">signal</span><span class="p">)</span> <span class="p">{</span>
+  <span class="kd">var</span> <span class="nx">peer</span> <span class="o">=</span> <span class="nx">peers</span><span class="p">[</span><span class="nx">signal</span><span class="p">.</span><span class="nx">userId</span><span class="p">];</span>
+
+  <span class="k">if</span> <span class="p">(</span><span class="nx">peer</span> <span class="o">===</span> <span class="kc">undefined</span><span class="p">)</span> <span class="p">{</span>
+    <span class="nx">peer</span> <span class="o">=</span> <span class="nx">setupPeer</span><span class="p">(</span><span class="nx">signal</span><span class="p">.</span><span class="nx">userId</span><span class="p">,</span> <span class="nx">signal</span><span class="p">.</span><span class="nx">userName</span><span class="p">,</span> <span class="kc">false</span><span class="p">);</span>
+  <span class="p">}</span>
+
+  <span class="nx">peer</span><span class="p">.</span><span class="nx">on</span><span class="p">(</span><span class="s1">&#39;ready&#39;</span><span class="p">,</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
+    <span class="nx">appendMessage</span><span class="p">(</span><span class="nx">signal</span><span class="p">.</span><span class="nx">userName</span><span class="p">,</span> <span class="s1">&#39;&lt;em&gt;Connected&lt;/em&gt;&#39;</span><span class="p">);</span>
+  <span class="p">});</span>
+  <span class="nx">peer</span><span class="p">.</span><span class="nx">signal</span><span class="p">(</span><span class="nx">signal</span><span class="p">.</span><span class="nx">data</span><span class="p">);</span>
+<span class="p">});</span>
+</pre></div>

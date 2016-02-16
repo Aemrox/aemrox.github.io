@@ -1,0 +1,25 @@
+<div class="highlight"><pre><span class="kd">function</span> <span class="nx">setupPeer</span><span class="p">(</span><span class="nx">peerUserId</span><span class="p">,</span> <span class="nx">peerUserName</span><span class="p">,</span> <span class="nx">initiator</span><span class="p">)</span> <span class="p">{</span>
+  <span class="kd">var</span> <span class="nx">peer</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">SimplePeer</span><span class="p">({</span> <span class="nx">initiator</span><span class="o">:</span> <span class="nx">initiator</span><span class="p">,</span> <span class="nx">stream</span><span class="o">:</span> <span class="nx">currentUser</span><span class="p">.</span><span class="nx">stream</span><span class="p">,</span> <span class="nx">trickle</span><span class="o">:</span> <span class="kc">false</span> <span class="p">});</span>
+
+  <span class="nx">peer</span><span class="p">.</span><span class="nx">on</span><span class="p">(</span><span class="s1">&#39;signal&#39;</span><span class="p">,</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">data</span><span class="p">)</span> <span class="p">{</span>
+    <span class="nx">channel</span><span class="p">.</span><span class="nx">trigger</span><span class="p">(</span><span class="s1">&#39;client-signal-&#39;</span> <span class="o">+</span> <span class="nx">peerUserId</span><span class="p">,</span> <span class="p">{</span>
+      <span class="nx">userId</span><span class="o">:</span> <span class="nx">currentUser</span><span class="p">.</span><span class="nx">id</span><span class="p">,</span> <span class="nx">userName</span><span class="o">:</span> <span class="nx">currentUser</span><span class="p">.</span><span class="nx">name</span><span class="p">,</span> <span class="nx">data</span><span class="o">:</span> <span class="nx">data</span>
+    <span class="p">});</span>
+  <span class="p">});</span>
+
+  <span class="nx">peer</span><span class="p">.</span><span class="nx">on</span><span class="p">(</span><span class="s1">&#39;stream&#39;</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">stream</span><span class="p">)</span> <span class="p">{</span> <span class="nx">gotRemoteVideo</span><span class="p">(</span><span class="nx">peerUserId</span><span class="p">,</span> <span class="nx">peerUserName</span><span class="p">,</span> <span class="nx">stream</span><span class="p">)</span> <span class="p">});</span>
+  <span class="nx">peer</span><span class="p">.</span><span class="nx">on</span><span class="p">(</span><span class="s1">&#39;close&#39;</span><span class="p">,</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span> <span class="nx">close</span><span class="p">(</span><span class="nx">peerUserId</span><span class="p">,</span> <span class="nx">peerUserName</span><span class="p">)</span> <span class="p">});</span>
+  <span class="nx">$</span><span class="p">(</span><span class="nb">window</span><span class="p">).</span><span class="nx">on</span><span class="p">(</span><span class="s1">&#39;beforeunload&#39;</span><span class="p">,</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span> <span class="nx">close</span><span class="p">(</span><span class="nx">peerUserId</span><span class="p">,</span> <span class="nx">peerUserName</span><span class="p">)</span> <span class="p">});</span>
+
+  <span class="nx">peer</span><span class="p">.</span><span class="nx">on</span><span class="p">(</span><span class="s1">&#39;message&#39;</span><span class="p">,</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">data</span><span class="p">)</span> <span class="p">{</span>
+    <span class="k">if</span> <span class="p">(</span><span class="nx">data</span> <span class="o">==</span> <span class="s1">&#39;__SPEAKING__&#39;</span><span class="p">)</span> <span class="p">{</span>
+      <span class="nx">$</span><span class="p">(</span><span class="s1">&#39;#remoteVideos video&#39;</span><span class="p">).</span><span class="nx">hide</span><span class="p">();</span>
+      <span class="nx">$</span><span class="p">(</span><span class="s2">&quot;#remoteVideos video[data-user-id=&#39;&quot;</span> <span class="o">+</span> <span class="nx">peerUserId</span> <span class="o">+</span> <span class="s2">&quot;&#39;]&quot;</span><span class="p">).</span><span class="nx">show</span><span class="p">();</span>
+    <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+      <span class="nx">appendMessage</span><span class="p">(</span><span class="nx">peerUserName</span><span class="p">,</span> <span class="nx">data</span><span class="p">);</span>
+    <span class="p">}</span>
+  <span class="p">});</span>
+
+  <span class="k">return</span> <span class="nx">peer</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>

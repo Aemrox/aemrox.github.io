@@ -1,0 +1,11 @@
+<div class="highlight"><pre><span class="n">proc_town</span> <span class="o">=</span> <span class="no">Proc</span><span class="o">.</span><span class="n">new</span> <span class="p">{}</span>
+<span class="n">lambda_ville</span> <span class="o">=</span> <span class="nb">lambda</span> <span class="p">{}</span>
+
+<span class="c1">#they are the same class</span>
+<span class="n">proc_town</span><span class="o">.</span><span class="n">class</span> <span class="c1">#-&gt; Proc</span>
+<span class="n">lambda_ville</span><span class="o">.</span><span class="n">class</span> <span class="c1">#-&gt; Proc</span>
+
+<span class="c1">#but if you look closer</span>
+<span class="n">proc_town</span> <span class="c1">#-&gt; &lt;Proc:0x007ff4b3d47510@(irb):59&gt;</span>
+<span class="n">lambda_ville</span> <span class="c1">#-&gt; &lt;Proc:0x007ff4b3d37660@(irb):60 (lambda)&gt;</span>
+</pre></div>

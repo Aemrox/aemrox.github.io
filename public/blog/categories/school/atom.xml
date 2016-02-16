@@ -1,0 +1,1113 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+
+  <title><![CDATA[Category: School | Ride or Pry]]></title>
+  <link href="http://aemrox.github.io/blog/categories/school/atom.xml" rel="self"/>
+  <link href="http://aemrox.github.io/"/>
+  <updated>2016-02-15T23:21:37-05:00</updated>
+  <id>http://aemrox.github.io/</id>
+  <author>
+    <name><![CDATA[Adam May]]></name>
+    
+  </author>
+  <generator uri="http://octopress.org/">Octopress</generator>
+
+  
+  <entry>
+    <title type="html"><![CDATA[Real-Time Video Chat on Rails Using WebRTC]]></title>
+    <link href="http://aemrox.github.io/blog/2016/02/11/real-time-video-chat-on-rails-using-webrtc/"/>
+    <updated>2016-02-11T16:06:41-05:00</updated>
+    <id>http://aemrox.github.io/blog/2016/02/11/real-time-video-chat-on-rails-using-webrtc</id>
+    <content type="html"><![CDATA[<p>There were many parts of my past projects that I genuinely enjoyed doing. I had moments that reaffirmed my entire choice to embark on this crazy career, and moments of unadulterated joy. Building video chat was not one of those moments. But I am happy I finally got it working.</p>
+
+<p>The process was very much wading through the weeds, but now I wanted to chronicle the way I got this tech working with Rails.</p>
+
+<p>A little background on WebRTC first (I don&rsquo;t want to go too deep into it, but you should know what you&rsquo;re working with). It&rsquo;s a free open-source framework start by Google for enabling real-time communication using nothing but native web browsers. The ability to support this kind of real-time communication with a piece of software that&rsquo;s available on essentially every computer is pretty amazing - but that doesn&rsquo;t necessarily mean it&rsquo;s easy to set up.</p>
+
+<h2>The process from a Bird&rsquo;s Eye</h2>
+
+<p>Let me give you guys an overview of the technologies I used to get this up and running:</p>
+
+<ol>
+<li><a href="https://webrtc.org/">WebRTC</a></li>
+<li><a href="https://pusher.com/">Pusher</a> - a 3rd party service for establishing real-time web sockets (along with the associated js library and ruby gem)</li>
+<li><a href="https://github.com/feross/simple-peer">Simplepeer.js</a> - a javascript library for establishing secure connections between peers</li>
+<li><a href="https://github.com/otalk/hark">Hark.js</a> - a javascript library for handling audio streams as speech</li>
+</ol>
+
+
+<p>In broad strokes the process goes like this.</p>
+
+<ol>
+<li>A user enters the link that hosts the video chat and is issued a GUID (or Global Unique Identifier)</li>
+<li>The user&rsquo;s video is grabbed using webRTC&rsquo;s getUserMedia() function</li>
+<li>The user establishes a connection to a pusher channel (or if they are the first party they establish the channel themselves)</li>
+<li>The user then continually looks for any other peer&rsquo;s on the channel with whom they can connect</li>
+<li>Another user enters the channel, following the same process from steps 2 and 3</li>
+<li>Once the second member is detected, Simple Peer attempts to establish a connection between the two users</li>
+<li>With a secure connection established, pusher handles the realtime transfer of video and audio streams between the two users and the respective feeds are assigned to video outlets in the html of the page handling the chat.</li>
+<li>Use Hark to determine which channel is speaking, and ensure their video is being show.</li>
+<li>BONUS - real-time messaging is enabled using basic DOM Manipulation and the open pusher channel between the two users.</li>
+</ol>
+
+
+<p>I&rsquo;ll do my best to walk through each step of the process, exposing as much of my code as possible. Alternatively, you can just <a href="https://github.com/Aemrox/Edifi/blob/master/app/assets/javascripts/video_chat.js">take a look at the whole shebang</a></p>
+
+<p>The number of guides I used is frankly hard to count and keep track of, but I&rsquo;ll try to include the lot of them in my resources section at the bottom. However, it&rsquo;s worth shouting out the <a href="http://blog.carbonfive.com/2014/10/16/webrtc-made-simple/">number 1 resource I&rsquo;ve had in all of this: CarbonFive</a>. To be totally frank, a good portion of my code came from things this guy wrote - so this is a great source to look at if you have any holes left over from this tutorial.</p>
+
+<h2>Step 1: Hosting the channel in a specific page</h2>
+
+<p>In order for all of this to work, you need an HTML page that has the appropriate sockets (here is <a href="https://github.com/Aemrox/Edifi/blob/master/app/views/chats/chat_page.html.erb">my example</a>). In my code, the important sockets include:
+1. a Div to eventually write remote videos
+2. a ul for all videos
+3. a preloaded video element for the local video (my own video)
+4. most importantly, as a little workaround to send the pusher authentication info to the javascript, I place a little invisible div with some of the information about the pusher key. Before you scold me, I know this is insecure, but this is just getting a demo up and running.</p>
+
+<p>Last part of this step, and the first part of the javascript that will handle the whole video chat is issuing the user a GUID. This is important because we need a way to uniquely identify every member of the chat when we look for new people joining the channel.</p>
+
+<pre><code class="javascript">var guid = (function() {
+  function s4() {
+    return Math.floor((1 + Math.random()) * 0x10000)
+               .toString(16)
+               .substring(1);
+  }
+  return function() {
+    return s4() + s4() + '-' + s4() + '-' + s4() + '-' +
+           s4() + '-' + s4() + s4() + s4();
+  };
+})();
+</code></pre>
+
+<p>Now I&rsquo;m sure there are better more secure ways to do this, but I essentially just generate a really big number that is incredibly unlikely to de duplicated by the next person joining the chat. Since every chat channel is a unique pusher channel, the chances of this being an issue is infinitesimally small.</p>
+
+<h2>Step 2: Grabbing the user&rsquo;s local video</h2>
+
+<p>This part is frankly fairly magical, and is part of what makes WebRTC so very cool. This is done in essentially one function:</p>
+
+<pre><code class="javascript">navigator.getUserMedia(mediaOptions, function(stream) {
+  currentUser.stream = stream;
+  var video = $('#localVideo')[0];
+  video.src = window.URL.createObjectURL(stream);
+  start();
+}, function() {});
+</code></pre>
+
+<p>that getUserMedia() is where all the magic happens, you feed it some options defined earlier, and it returns a callback with a stream object which holds the real-time flow from the user&rsquo;s camera. All the permissions are handled by WebRTC, all of the proper wrapping of the video stream as well. That stream can be assigned to any html5 video element, as you see on line 4 - where I grab the local video element I designed in the page, and assign the video to it. At it&rsquo;s core, that&rsquo;s how easy it is to grab video through WebRTC - the real challenge comes in connection two people together.</p>
+
+<p>Two notes before I move on:</p>
+
+<p>Here are the options that need to be defined to determine how this stream is configured:</p>
+
+<pre><code class="javascript">var mediaOptions = {
+  audio: true,
+  video: {
+    mandatory: {
+      minWidth: 1280,
+      minHeight: 720
+    }
+  }
+};
+</code></pre>
+
+<p>Second, there is another line that needs to be written to make this work across all browsers, each of which alias webRTC in slightly different ways:</p>
+
+<pre><code class="javascript">navigator.getUserMedia = navigator.getUserMedia || navigator.webkitGetUserMedia || navigator.mozGetUserMedia;
+</code></pre>
+
+<h2>Step 3: Establishing the Connection to Pusher</h2>
+
+<p>The first step here is to convert the user entering the channel into an object that pusher can work with. In my case, I pull the current user&rsquo;s name from the rails server with an ajax request. That user is then structured as such:</p>
+
+<pre><code class="javascript">currentUser = {
+        name: data.user_name,
+        id: guid(),
+        stream: undefined //This gets defined when we pull the stream like we did in the previous section
+      };
+</code></pre>
+
+<p>Now we need to create an object that will allow us to interact with pusher:</p>
+
+<pre><code class="javascript">var pusher = new Pusher($('#chat').data().apiKey, {
+          authEndpoint: '/pusher/auth',
+          auth: {
+            params: currentUser
+          }
+        });
+</code></pre>
+
+<p>So there is a lot going on here that we need to unpack. In the first line we are instantiating a new pusher object (using the pusher.js library which should be included in your Rails' vendor javascript assets - I put it there manually).</p>
+
+<p>That instantiation is using the Api Key which we hid in the html of the form. In a more complex (read secure) application, you would create a secure connection to the backend to retrieve that key, but let&rsquo;s just gloss over that for now.</p>
+
+<p>In addition, that instantiation needs an authorization endpoint, which will exist as a route inside your rails app. Here is how that route is defined:</p>
+
+<pre><code class="ruby">match '/pusher/auth' =&gt; 'pusher#auth', via: :post
+</code></pre>
+
+<p>And here is what that route actually does:
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+</pre></td><td class='code'><pre><code class='ruby'><span class='line'><span class="k">class</span> <span class="nc">PusherController</span> <span class="o">&amp;</span><span class="n">lt</span><span class="p">;</span> <span class="no">ApplicationController</span>
+</span><span class='line'>  <span class="n">protect_from_forgery</span> <span class="ss">except</span><span class="p">:</span> <span class="ss">:auth</span><span class="o">&lt;</span><span class="sr">/p&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="sr">&lt;p&gt;  def auth</span>
+</span><span class='line'><span class="sr">    response = Pusher[params[:channel_name]].authenticate params[:socket_id],</span>
+</span><span class='line'><span class="sr">      user_id: params[:id],</span>
+</span><span class='line'><span class="sr">      user_info: { name: params[:name] }&lt;/</span><span class="nb">p</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">pre</span><span class="o">&gt;&lt;</span><span class="n">code</span><span class="o">&gt;</span><span class="n">render</span> <span class="ss">json</span><span class="p">:</span> <span class="n">response</span>
+</span><span class='line'><span class="o">&lt;</span><span class="sr">/code&gt;&lt;/</span><span class="n">pre</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="nb">p</span><span class="o">&gt;</span>  <span class="k">end</span>
+</span><span class='line'><span class="k">end</span>
+</span></code></pre></td></tr></table></div></figure></p>
+
+<p>In addition, you need to make sure your rails app has your pusher key, secret, and app number as environment variables. For more on pusher setup with rails, take a look <a href="https://github.com/pusher/pusher-http-ruby">here</a> at the pusher gem for rails. I took nearly all of the code for setup from there, so it&rsquo;s a good resource.</p>
+
+<p>Now back to Javascript. We know have a pusher variable that represents our &ldquo;pusher object&rdquo;. The next step is to find or create the appropriate channel, and connect to it:</p>
+
+<pre><code class="Javascript">var channelID = 'presence-chat-' + window.location.href.match(/lessons\/(\d+)\/?/)[1];
+var channel = pusher.subscribe(channelID);
+</code></pre>
+
+<p>Here we take the url, pull the lesson number, and use that to name our nascent channel. This ensures that anyone in the same link will be on the same pusher channel. We then assign that channel to a variable, using the pusher function subscribe(). This will find the channel if it exists, or open it for the first time. For more on how this works, check out the <a href="https://pusher.com/docs">Pusher documentation</a>.</p>
+
+<p>Now we have our channel open for at least one user, we will be using this channel variable as our main point of entry from here on out, so get used to it.</p>
+
+<h2>Step 4: Looking for others on the channel</h2>
+
+<p>This step is fairly simple, we are going to write a short little loop, that will look for other users as long as the channel is open:</p>
+
+<pre><code class="javascript">var peers = {};
+function lookForPeers() {
+  for (var userId in channel.members.members) {
+    if (userId != currentUser.id) {
+      var member = channel.members.members[userId];
+
+      peers[userId] = initiateConnection(userId, member.name);
+    }
+}
+</code></pre>
+
+<p>This is a for loop that loops through the guids of all of the members of the channel. If it finds a guid that is not equal to the guid of the current user, it initiates a connection (a piece of code we will see later).</p>
+
+<p>This is why it was important to establish a guid when we created our user. Now, we are going to have to define when this function is called. The way we do that is by binding it as a callback to be called when the channel has been successfully subscribed to, as such:</p>
+
+<pre><code class="javascript">channel.bind('pusher:subscription_succeeded', lookForPeers);
+</code></pre>
+
+<p>The concept of binding actions to client events (such as a successful subscription to a channel) is part of what makes pusher so powerful and robus - if you are interested in learning more, take a look at <a href="https://pusher.com/docs/client_api_guide/client_events">this piece of documentation</a>.</p>
+
+<h2>Step 5: A Wild User Appears!</h2>
+
+<p>The trick to how this code really works is that it is embedded in the web page. So whenever a new user enters the page, they begin the same process. So in our imaginary case, another person will enter the channel, and go through the steps 2 and 3 and end up subscribing to the same pusher channel.</p>
+
+<p>Once this is done, our callback to look for other peers will be called, initiating the process of connecting our first and second user.</p>
+
+<h2>Step 6: The Handshake and then some</h2>
+
+<p>Now that we have two users occupying the same pusher channel, we need to establish a connection. Establishing any secure connection can be an arduous process, so finding a library that does it for us makes this a lot easier. The library I chose was a fairly easy one to use called <a href="https://github.com/feross/simple-peer">SimplePeer</a>.</p>
+
+<p>Like with most libraries, easiest way to make this work is to pop it in the javascript folder in your vendor directory within the rails app. From there, use is pretty simple.</p>
+
+<p>As we saw earlier, once we find another peer, we are going to call a function called initiateConnection. Here is the function in it&rsquo;s entirety:</p>
+
+<pre><code class="javascript">function initiateConnection(peerUserId, peerUserName) {
+  return setupPeer(peerUserId, peerUserName, true);
+}
+</code></pre>
+
+<p>The reason for having this spacing between the initiation of the handshake and initiate connection is to be able to determine who is the owner of the connection, or who is making it. This initiateConnection function is being called by the person looking for peers, so whoever is setting up this connection is the initiator.</p>
+
+<p>setupPeer() will need to be called by both ends of the connection, so let&rsquo;s take a look at setupPeer(). Fair warning, it&rsquo;s a lengthy bit of code:</p>
+
+<pre><code class="javascript">function setupPeer(peerUserId, peerUserName, initiator) {
+  var peer = new SimplePeer({ initiator: initiator, stream: currentUser.stream, trickle: false });
+
+  peer.on('signal', function (data) {
+    channel.trigger('client-signal-' + peerUserId, {
+      userId: currentUser.id, userName: currentUser.name, data: data
+    });
+  });
+
+  peer.on('stream', function(stream) { gotRemoteVideo(peerUserId, peerUserName, stream) });
+  peer.on('close', function() { close(peerUserId, peerUserName) });
+  $(window).on('beforeunload', function() { close(peerUserId, peerUserName) });
+
+  peer.on('message', function (data) {
+    if (data == '__SPEAKING__') {
+      $('#remoteVideos video').hide();
+      $("#remoteVideos video[data-user-id='" + peerUserId + "']").show();
+    } else {
+      appendMessage(peerUserName, data);
+    }
+  });
+
+  return peer;
+}
+</code></pre>
+
+<p>The first thing that&rsquo;s happening is that we are using simple peer to create a peer object. This object is aimed at mirroring the other user, almost like the currentUser variable we set up in the beginning. What happens next is that we assign this peer many messages it can respond to, along with what it should respond with.</p>
+
+<p>The first message is the signal test, this triggers a ping and response between the currentUser and their peer. This is used to establish the connection in the other direction (for the non-initiator). The event that this behaviour triggers is bound later in the following code:</p>
+
+<pre><code class="javascript">channel.bind('client-signal-' + currentUser.id, function(signal) {
+  var peer = peers[signal.userId];
+
+  if (peer === undefined) {
+    peer = setupPeer(signal.userId, signal.userName, false);
+  }
+
+  peer.on('ready', function() {
+    appendMessage(signal.userName, '&lt;em&gt;Connected&lt;/em&gt;');
+  });
+  peer.signal(signal.data);
+});
+</code></pre>
+
+<p>The next message is a stream, it is the basic request for the video stream, which triggers the gotRemoteVideo function which we will take a look at in a second.</p>
+
+<p>The next message is close, which severs the connection. If you take a look at the next line of code, it ensures that if the window ever closes the connection is automatically severed.</p>
+
+<p>The rest of the code revolves around a couple of bonus functions, the first is live messaging between the two. The other is making sure that whoever is speaking has their video featured on the remote video feed. We&rsquo;ll revisit these later in our bonus section.</p>
+
+<h2>Step 7: Gettin' Dat Video</h2>
+
+<p>So as we&rsquo;ve seen both when we create our user and establish the connection with our peer, we are always setting a stream object that we&rsquo;ve taken from webRTC. That stream object is about to be put to use to complete our video chat. So once the stream has been received, we need to render it into usable video. Thankfully, that is fairly easy to do:</p>
+
+<pre><code class="javascript">function gotRemoteVideo(userId, userName, stream) {
+  var video = $("&lt;video autoplay data-user-id='" + userId + "'/&gt;");
+  video[0].src = window.URL.createObjectURL(stream);
+  $('#remoteVideos').append(video);
+
+  var preview = $("&lt;li data-user-id='" + userId + "'&gt;");
+  preview.append("&lt;video autoplay/&gt;");
+  preview.append("&lt;div class='name'&gt;" + userName + "&lt;/div&gt;&lt;/li&gt;");
+  preview.find('video')[0].src = window.URL.createObjectURL(stream);
+
+  $('#allVideos').append(preview);
+}
+</code></pre>
+
+<p>So here we are creating an html video object, setting it&rsquo;s feed to the stream object we received, and appending it to the big screen (#remoteVideos). In addition, we are creating a smaller preview object to place at the bottom of the screen (much like they do on Google Hangouts).</p>
+
+<p>And there you have it! Two way video! Obviously there are lots of places this can go wrong, especially in the connection pusher. Luckily, pusher provides a very handy interface to handle all these debugging problems, and checking that status of the connections you&rsquo;ve made. Just checkout the debug console of your <a href="https://dashboard.pusher.com/">pusher dashboard</a>.</p>
+
+<h2>Steps 8 &amp; 9, HAVEN&rsquo;T YOU HAD ENOUGH ALREADY?!</h2>
+
+<p>So there are a couple other tricks that this code does to replicate the functionality of something like google hangouts.</p>
+
+<p>The first is using Hark.js, a library that can identify speech, to send a signal back and forth that indicates when someone is speaking.</p>
+
+<pre><code class="javascript">var speech = hark(currentUser.stream);
+
+speech.on('speaking', function() {
+  for (var userId in peers) {
+    var peer = peers[userId];
+    peer.send('__SPEAKING__');
+  }
+});
+</code></pre>
+
+<p>This signal (which we&rsquo;ve actually already seen!), will trigger a hiding and showing of the correct remote video feed.</p>
+
+<p>The messages is a bit more complicated, I have not gotten it to work in both directions 100%. But you&rsquo;ve already seen a large chunk of the code. Here is the last bit:</p>
+
+<pre><code class="javascript">$('#send-message').submit(function(e) {
+  e.preventDefault();
+  var $input = $(this).find('input'),
+      message = $input.val();
+
+  $input.val('');
+
+  for (var userId in peers) {
+    var peer = peers[userId];
+    peer.send(message);
+  }
+  appendMessage(currentUser.name, message);
+});
+</code></pre>
+
+<p>There is a message bar that we&rsquo;ve defined on our html page. When a message is submitted, it is sent out to every peer. As we&rsquo;ve seen in the listening functions we&rsquo;ve set on a peer, when that message is received, it is appended to the message box at the bottom of the screen.</p>
+
+<p>The truth of the matter is, all of these bells and whistles are fairly simple once you have the connection established. Pushed is an incredibly powerful piece of technology, that I would heartily recommend exposing yourself to!</p>
+
+<h2>TLDR</h2>
+
+<p><img src="https://media.giphy.com/media/iNwXHhkqlfOla/giphy.gif" alt="VIDEOOOO" /></p>
+
+<h2>Resources:</h2>
+
+<ul>
+<li><a href="https://pusher.com/tutorials/webrtc_chat">Pusher&rsquo;s Tutorial on WebRTC</a></li>
+<li><a href="http://blog.carbonfive.com/2014/10/16/webrtc-made-simple/">CarbonFive&rsquo;s WebRTC Setup</a></li>
+<li><a href="https://github.com/feross/simple-peer">Simple Peer</a></li>
+<li><a href="http://www.html5rocks.com/en/tutorials/webrtc/basics/">WebRTC Basics from HTML5Rocks</a></li>
+<li><a href="https://pusher.com/docs">Pusher Documentation</a></li>
+</ul>
+
+]]></content>
+  </entry>
+  
+  <entry>
+    <title type="html"><![CDATA[Ruby-fied Javascript Part II: Currying]]></title>
+    <link href="http://aemrox.github.io/blog/2016/02/03/ruby-fied-javascript-currying/"/>
+    <updated>2016-02-03T14:11:44-05:00</updated>
+    <id>http://aemrox.github.io/blog/2016/02/03/ruby-fied-javascript-currying</id>
+    <content type="html"><![CDATA[<p>This is the Electric Boogaloo in my series on discovering the functional and sexy aspects of Javascript within Ruby. For those of you who haven&rsquo;t read <a href="http://aemrox.github.io/blog/2016/01/25/ruby-fied-javascript-first-class-functions/">Part I</a> of this series, you should check it out, because I&rsquo;ll be relying on a few of those concepts in the following blog.</p>
+
+<p>Today, I want to explore the concept of currying, and borrowing code from other functions (or even entire functions) to write DRYer, more compact and elegant code. Brace yourselves:</p>
+
+<p><img src="http://i.imgur.com/SKwuFrg.jpg" alt="Next Level Shit" /></p>
+
+<h2>Javascript - All Types of Curry</h2>
+
+<p>Before we delve into the depths of ruby madness, let&rsquo;s wrap our heads around the concept of what it exactly means to borrow functions, and how it works in Javascript.</p>
+
+<p>Javascript has three separate methods that all allow you to bend functions to your will (and to your specific purpose): Bind, Apply and Call. They each have their own limitations and purpose, so let&rsquo;s go one by one and pick apart how each of these methods work.</p>
+
+<h4>The Ties that Bind()</h4>
+
+<p><img src="https://s-media-cache-ak0.pinimg.com/736x/d9/83/28/d983287bb6e589eea0511f1c09288ef0.jpg" alt="bad bondage pun" /></p>
+
+<p>Chances are, you&rsquo;ve actually seen a good amount of the function .bind(), it&rsquo;s a very common way to deal with the &ldquo;this&rdquo; problem in Javascript. In short, .bind() allows you to dictate what &ldquo;this&rdquo; will refer to inside the function at the time the function is called. From this property alone, you can probably guess how this will allow us to start borrowing functions.</p>
+
+<p>When functions are written vaguely enough, operating on objects using primarily the &ldquo;this&rdquo; keyword, they become fairly easy to bend. Let&rsquo;s take a look at an example:</p>
+
+<pre><code class="Javascript">function Widgets(name, quantity, price) {
+  this.name = name;
+  this.quantity = quantity;
+  this.price = price;
+  this.costOfInventory = function(){
+    var totalCost = this.quantity * this.price
+    return "The cost of the entire inventory of " + this.name + " is $" + totalCost
+  }
+}
+</code></pre>
+
+<p>In the function constructor we just defined, we managed to design the function costOfInventory so that it does not take any arguments, and only operates on properties attached to an object, referred to as this. Now we can use this function to refer to any object that has similar structure. For instance:</p>
+
+<pre><code class="Javascript">var wonkyWicket = {
+  name: "Wonky Wickets",
+  quantity: 100
+  price: 10
+}
+
+Widgets.costOfInventory().bind(wonkyWicket) // -&gt; "The cost of the entire inventory of Wonky Wickets is $1000
+</code></pre>
+
+<p>This gets even more powerful when you consider Javascript&rsquo;s support for <a href="http://aemrox.github.io/blog/2016/01/25/ruby-fied-javascript-first-class-functions/">first class functions</a>:</p>
+
+<pre><code class="Javascript">wonkyWicket.costOfInventory = Widgets.costOfInventory().bind(wonkyWicket);
+</code></pre>
+
+<p>now wonkyWicket has effectively borrowed the costOfInventory function from the Widget constructor, and it can be called normally. BUT WAIT, there&rsquo;s more! Bind can take additional arguments, and these arguments set default values for the arguments in function .bind() is being called on.</p>
+
+<pre><code class="Javascript">var fakeItem = {
+  quantity: 100
+  price: 10
+}
+
+Widgets.costOfInventory().bind(fakeItem, "Something AWESOME") // -&gt; "The cost of the entire inventory of Something AWESOME is $1000
+</code></pre>
+
+<p>What the bind function is actually doing is creating a new function with default values in the place of the arguments that you defined in bind. This process is known as currying or partial function application. You substitute hard values for arguments, thus modifying the function.</p>
+
+<p>Nuts right? And it gets even better when we start dealing with useful things like arrays and strings.</p>
+
+<p>One important thing to note that will persist with us is that it&rsquo;s not as simple as calling .bind(), there is a decent amount of prep involved. Being able to borrow or curry functions is something you have to think through from the beginning, almost like how a certain design principles have some upfront work, but make your life easier down the road.</p>
+
+<h4>I&rsquo;m Call()in' you Out, Apply() Yourself!</h4>
+
+<p>The last two methods we are going to go over are .call() and .apply().</p>
+
+<p>Truth be told, these functions are very similar to .bind() but there are a few key differences. Let&rsquo;s start with the differences between .bind() and .call().</p>
+
+<pre><code class="Javascript">function saySomething(name){
+  return this.greeting + name + ", you old dog you!"
+}
+
+var hello = {
+  greeting: "HALLO "
+}
+
+var supChip = saySomething.bind(hello, "Chip")
+
+saySomething.call(hello, "Duckie") //-&gt; "HALLO Duckie, you old dog you!"
+supChip() //-&gt; "HALLO chip, you old dog you!"
+</code></pre>
+
+<p>Here we begin to see the difference between these two very similar methods. They both set &ldquo;this&rdquo; with their first argument and set subsequent arguments in the method with their next parameters. However, .bind() returns a new function, whereas .call() immediately evaluates the function it&rsquo;s called on with it&rsquo;s special parameters.</p>
+
+<p>.apply() is more similar to .call() than .bind(). In fact, the only difference is in the way .apply() is called.</p>
+
+<pre><code class="Javascript">function saySomethingElse(name, color, location){
+  return this.introduction + name + ". My favorite color is " + color + " and I'm from " + location
+}
+
+var intro = {
+  introduction: "YOU GUYZ I'M "
+}
+
+saySomethingElse.call(intro, "Adam", "Aubergine", "Austria") //-&gt; YOU GUYS I'M Adam. My favorite color is Aubergine and I'm from Austria
+saySomethingElse.apply(intro, ["Benny","Burgundy","Belize"]) //-&gt; YOU GUYS I'M Benny. My favorite color is Burgundy and I'm from Belize
+</code></pre>
+
+<p>As you can see, the arguments passed through .apply() must be passed in an array. This is useful for functions where the arguments being passed in are more flexible or optional.</p>
+
+<h2>A Ruby in the Rough</h2>
+
+<p><img src="http://kardsunlimited.com/wp-content/uploads/2013/06/tumblr_lounw0Da7r1qi6sy1o1_500.png" alt="Ruby is rough" /></p>
+
+<p>As we&rsquo;ve spoken about before, Ruby can play functional with the big dogs, and as it&rsquo;s evolved as a language, it&rsquo;s gained even more functional properties. We&rsquo;re going to explore a few ways of replicating this awesome functionality from Javascript.</p>
+
+<h4>Waddya Mean Modules?!</h4>
+
+<p><img src="http://blog.wassill.eu/sites/default/files/styles/adaptive/public/sfkuxr4.png?itok=FUXr3pHL" alt="What if I told you?" /></p>
+
+<p>The first method of sharing methods between classes is one we are all pretty familiar with. A Module is a different type of object that can mix methods into another class. Much like binding this to a function, the Module and Class need to share certain functionality to begin with.</p>
+
+<pre><code class="ruby">module Greetable
+  def say_hi
+    "HI #{self.name}"
+  end
+
+  def say_bye
+    "BYE #{self.name}"
+  end
+end
+</code></pre>
+
+<p>As long as a class has a name attribute, it can easily become &ldquo;Greetable&rdquo; by using the following code:</p>
+
+<pre><code class="ruby">class Person
+  attr_accessor :name
+
+  include Greetable
+end
+</code></pre>
+
+<p>Now person has the methods #say_hi and #say_bye!</p>
+
+<p>I won&rsquo;t delve too far into Module functionality, since it&rsquo;s pretty well covered, but this is a peek at how Ruby can share methods between classes. Much like Javascript leverages the &ldquo;this&rdquo; keyword to allow for code that is applicable in many scenarios, Ruby&rsquo;s &ldquo;self&rdquo; keyword affords similar functionality in it&rsquo;s Object Oriented design.</p>
+
+<h4>Call me Ruby?</h4>
+
+<p><img src="http://weknowmemes.com/wp-content/uploads/2012/05/hello-maybe-this-is-dog.jpg" alt="This is dog" /></p>
+
+<p>Turns out that Ruby has it&rsquo;s own version of .call() and unsurprisingly it&rsquo;s strongly related to the Proc class. Any proc accepts a message of .call as a command to run the code inside the proc, so simply put, it&rsquo;s a way of running a proc. Given that Procs don&rsquo;t arity check (unless they are lambdas), this can be used to replicate some of the usefulness of .call() or .apply(). However, as of Ruby 1.9.3 there is one slightly more useful function.</p>
+
+<h4>Keep Calm and Curry On</h4>
+
+<p><img src="http://bircurries.co.uk/forum/download/file.php?id=1067&amp;t=1" alt="Curry Puns LOLZ" /></p>
+
+<p>Ruby gained full partial function application support when it added the .curry function. In 1.9.3 .curry could be called on any proc or lambda and it would return a new proc or lambda that had one of it&rsquo;s arguments set with a specific parameter. If this functionality is still a bit fuzzy, ponder the following code.</p>
+
+<pre><code class="ruby">do_math = lambda do |operator, x, y|
+  a.send(operator, b)
+end
+
+do_math.(:+, 2, 3) #-&gt; 5
+do_math.(:*, 2, 3) #-&gt; 6
+do_math.(:-, 3, 2) #-&gt; 1
+</code></pre>
+
+<p>This bit of metaprogramming is pretty straightforward, but we can break this down a bit further using #curry.</p>
+
+<pre><code class="ruby">add = do_math.curry(:+)
+add.(2,3) #-&gt; 5
+add.(10,5) #-&gt; 15
+
+subtract = do_math.curry(:-)
+subtract.(4,2) #-&gt; 2
+subtract.(12,9) #-&gt; 3
+</code></pre>
+
+<p>When we called #curry on #do_math we set the first argument (the operator) and store the resulting function in a new variable. We can even take this a step further.</p>
+
+<pre><code class="ruby">increment = add.curry(1)
+increment.(100) #-&gt; 101
+</code></pre>
+
+<p>As you can see, the potential here to dry up code is enormous. If one designs their functions properly, one function is powerful enough to write plenty. However, the key word is &ldquo;design&rdquo;, it takes a lot of planning or refactoring in order to achieve this next level DRYness.</p>
+
+<p><img src="http://img.pandawhale.com/post-58159-Im-gonna-make-it-so-dry-for-yo-6Yyj.gif" alt="So Dry" /></p>
+
+<h4>Final Note</h4>
+
+<p>As of Ruby 2.2.0 there is now a way to call curry on any method (instead of just on procs and lambdas). It looks something like this:</p>
+
+<pre><code class="ruby">def say_hi(name)
+  "Hi #{name}"
+end
+
+chet = method(:say_hi).curry("Chet")
+chet.() #-&gt; Hi Chet
+</code></pre>
+
+<p>If you&rsquo;d like to read more, check out the <a href="http://ruby-doc.org/core-2.2.0/Method.html">documentation on 2.2.0&rsquo;s method class</a> - there is lot&rsquo;s of other cool functional aspects there.</p>
+
+<h2>Resources</h2>
+
+<p>You know, because god knows I didn&rsquo;t learn this on my own.</p>
+
+<ul>
+<li><a href="http://javascriptissexy.com/javascript-apply-call-and-bind-methods-are-essential-for-javascript-professionals/">Javascript is sexy</a></li>
+<li><a href="http://stackoverflow.com/questions/15677738/whats-the-difference-between-call-apply-and-bind">Stackoverflow Answer</a></li>
+<li><a href="http://hangar.runway7.net/javascript/difference-call-apply">Good blog on apply and bind</a></li>
+<li><a href="http://www.sitepoint.com/functional-programming-techniques-with-ruby-part-ii/">How I even learned about Currying</a></li>
+</ul>
+
+
+<p>Lastly, RUBY CURRY
+<img src="http://ramblingsofafoodaddict.com/wp-content/uploads/2014/05/Chicken-Ruby.jpg" alt="Ruby Curry!" /></p>
+]]></content>
+  </entry>
+  
+  <entry>
+    <title type="html"><![CDATA[Ruby-fied Javascript Part I: First Class Functions]]></title>
+    <link href="http://aemrox.github.io/blog/2016/01/25/ruby-fied-javascript-first-class-functions/"/>
+    <updated>2016-01-25T14:20:12-05:00</updated>
+    <id>http://aemrox.github.io/blog/2016/01/25/ruby-fied-javascript-first-class-functions</id>
+    <content type="html"><![CDATA[<p>As I&rsquo;ve started learning Javascript, I&rsquo;ve had alternating moments of progressively confusing rage, soul-encompassing <a href="http://knowyourmeme.com/memes/wat">&ldquo;wat&rdquo;</a>, laced with moments of being genuinely impressed by Javascript&rsquo;s functional elements. It&rsquo;s like eating your least favorite ice cream flavor mixed with your favorite sprinkles.</p>
+
+<p><img src="http://i1.kym-cdn.com/photos/images/original/000/517/320/71c.gif" alt="&quot;What is this, I don't Even&quot;" /></p>
+
+<p>However, as I&rsquo;ve delved deeper into some of these features, I&rsquo;ve been inspired to go back to Ruby and see which of these features have equivalents, and I&rsquo;ve been pleasantly surprised to see that more than a few do.</p>
+
+<p>In this first part, I want to explore how Ruby handles First-class Functions.</p>
+
+<h2>What is a First-class Function?</h2>
+
+<p>When a programming language is said to have First-class Functions, it&rsquo;s a way of saying that the language allows for functions to be treated like objects, and passed back and forth as arguments.</p>
+
+<p>So when we pass in a function as an argument in JS, or even get one back as a return value, we are exploiting this incredibly useful function of Javascript. As seen below:</p>
+
+<pre><code class="Javascript">function theOneWePass(){
+  return "This is from the function passed in";
+}
+
+function theOneWeCall(theOneWePass){
+  console.log(theOneWePass());
+  return function(){
+    return "and this is the function that was passed back";
+  };
+}
+
+var thisHoldsAFunction = theOneWeCall(theOneWePass); // logs "This is from the function passed in"
+thisHoldsAFunction(); //-&gt;"and this is the function that was passed back"
+</code></pre>
+
+<p>Strictly speaking, ruby does not support First-class Functions. Methods cannot be return values or held in variables. But methods are far from all Ruby uses to implement functions. And some of these functions have Javascript-y super powers.</p>
+
+<h2>Blocks and Yield</h2>
+
+<p>Nearly anyone who has touched Ruby is probably familiar with a block. It allows us to customize methods by passing in custom instructions that are executed somewhere within the method, using the <strong>yield</strong> keyword.</p>
+
+<pre><code class="ruby">def some_method(array)
+  array.each do |elem|
+    yield(elem)
+  end
+end
+
+some_method([1,2,3,4]) do |elem|
+  puts (elem * 2)
+end #-&gt; 2, 4, 6, 8
+</code></pre>
+
+<p>In this example we are actually passing a block into a method twice, first when we call #some_method and next when we call the #each method. This is almost like passing a function as an argument, except we define the whole function, and instead of calling it by name, it gets called when we use the <strong>yield</strong> keyword. It&rsquo;s pretty much a regular closure and it even has the coolest property of a closure, which is access to the scope in which it was defined.</p>
+
+<pre><code class="ruby">x= 10
+
+some_method([1,2,3,4]) do |elem|
+  puts (elem * x)
+end #-&gt; 10, 20, 30, 40
+</code></pre>
+
+<p>But there is one important difference, we have to write out the function, we still are not assigning it to a variable.</p>
+
+<p>However, there is a way we can do that!</p>
+
+<h2>Procs! Procs Everywhere!</h2>
+
+<p><img src="http://i.imgur.com/wJ0cIkO.jpg" alt="Procs Everywhere" /></p>
+
+<p>A Proc is how ruby wraps a function into an object, and best of all, they can be defined and saved to variables! This means that they can be called at will with the .call method.</p>
+
+<pre><code class="ruby">  def gen_exponential(factor)
+    return Proc.new do |n|
+      sum = n
+      (factor-1).times do
+        sum *= n
+      end
+      sum
+    end
+  end
+
+  cuber = gen_exponential(3)
+  cuber.call(3) #-&gt; 27
+  cuber.call(4) #-&gt; 64
+</code></pre>
+
+<p>You can even pass that Proc back and forth into functions.</p>
+
+<pre><code class="ruby">  [1,2,3,4].map do |elem|
+    cuber.call(elem)
+  end #-&gt; [1,8,27,64]
+
+  def cool_map(array, something_to_call)
+    new_array = []
+    array.each do |elem|
+      new_array &lt;&lt; something_to_call.call(elem)
+    end
+    new_array
+  end
+
+  cool_map([1,2,3,4], cuber)#-&gt; [1,8,27,64]
+</code></pre>
+
+<p>So far so cool right?</p>
+
+<p>So quick recap, both blocks and procs allow you to pass code into other methods. BUT, procs are objects, and blocks are not. Procs can be passed into methods as arguments, and can be called with the .call(), and blocks can only be passed by writing the whole block out, they must be called with the yield function, and each method can only have one block.</p>
+
+<p>Now let&rsquo;s go deeper</p>
+
+<h2>How Many Procs could a Proc Block Proc if we use the Unary Operator?</h2>
+
+<p><img src="http://i2.photobucket.com/albums/y42/GilGrissomCSI/woodchuck.jpg" alt="BRING IT" /></p>
+
+<p>Let&rsquo;s take a look at this piece of code.</p>
+
+<pre><code class="ruby">def some_method(&amp;block)
+  block.class
+end
+
+some_method do
+
+end #-&gt; Proc
+</code></pre>
+
+<p>The first thing you should know, is that the ampersand is also known as the unary operator, and it&rsquo;s a means of turning Blocks into Procs and visa versa. In the above example, it is used to turn the block into a proc, i.e. make it an object. Once it&rsquo;s an object, we can call object methods on it, and see that it is actually a proc. The unary also works in the opposite direction, turning procs into blocks which can then be passed into methods that need a block.</p>
+
+<pre><code class="ruby">putstuff = Proc.new{|thing| puts thing}
+
+[1,2,3,4].each &amp;putstuff #-&gt; 1,2,3,4
+</code></pre>
+
+<p>This allows us to save methods in variables and pass them into blocks with relative ease.  But there is one more step to consider when looking at how</p>
+
+<h2>Mary had a little Lambda</h2>
+
+<p><img src="http://3.bp.blogspot.com/-8AfGm4Uy3CU/UBqhxWvD7VI/AAAAAAAAARU/iVQAHfgv3cs/s1600/a-wolf-in-sheeps-clo_1339994049_epiclolcom.png" alt="Soon" /></p>
+
+<p>Now there is one more way in which Ruby supports first class functions: lambdas. Lambdas are actually a lot like procs, but almost a different &ldquo;flavor&rdquo;. Lambdas can be passed back and forth, and are called similarly to procs, but they are declared slightly differently, and have a few other important differences.</p>
+
+<pre><code class="ruby">proc_town = Proc.new {}
+lambda_ville = lambda {}
+
+#they are the same class
+proc_town.class #-&gt; Proc
+lambda_ville.class #-&gt; Proc
+
+#but if you look closer
+proc_town #-&gt; &lt;Proc:0x007ff4b3d47510@(irb):59&gt;
+lambda_ville #-&gt; &lt;Proc:0x007ff4b3d37660@(irb):60 (lambda)&gt;
+</code></pre>
+
+<p>There are two other key differences, which very much affect the way these are used.</p>
+
+<h5>Arity Checking</h5>
+
+<p>As we&rsquo;ve seen with Javascript, sometimes languages do not care about whether the number of arguments you pass to a function match the number of arguments that function takes.</p>
+
+<p>Similar to Javascript functions, Procs will not throw an argument error if they are passed a varying number of arguments, while Lambdas do enforce argument strictness (or in other words, they arity check). This makes procs a little dangerous, only in the sense that they will fail silently if you mess something up (like Javascript), but they are also more flexible.</p>
+
+<h5>Return of the Lambda</h5>
+
+<p>Procs and Lambdas differ in the way that they return values to where they are called. A Proc does not create it&rsquo;s own &ldquo;return scope&rdquo;, meaning it almost becomes a part of the function that calls it. So if a Proc triggers the return keyword, it will short-circuit the rest of the method that called it.</p>
+
+<pre><code class="ruby">def messing_with_procs
+  foo = Proc.new {return "'nothing' is wrong!"}
+  foo.call
+  puts "Sometimes Proc's fail silently"
+end
+
+puts messing_with_procs #-&gt; "'nothing' is wrong!"
+</code></pre>
+
+<p>Lambdas are different, they do create their own return scope, so if a lambda triggers the return keyword, it will exit the lambda code, but return to the method that called it.</p>
+
+<pre><code class="ruby">def sweet_sweet_lambdas
+  bar = lambda {return "Actually nothing is wrong"}
+  puts bar.call + "because lambdas are so so sweet"
+end
+
+puts sweet_sweet_lambdas #-&gt; "Actually nothing is wrong because lambdas are so so sweet"
+</code></pre>
+
+<h2>Recap</h2>
+
+<p>So let&rsquo;s recap, one of the cooler things about Javascript is that it supports First-class functions, which means passing functions to functions and having them return other functions (some of which also take and return functions). FUNCTIONS. Being passed back and forth. Forever.
+<img src="http://i.imgur.com/e7RHh2a.jpg" alt="Yo Dawg" /></p>
+
+<p>Turns out, ruby ain&rsquo;t no slouch. Though the traditional method of passing code to functions through blocks is pretty limited, we still have the options of procs and lambdas, which give ruby true support for First-class functions.</p>
+
+<h2>Resources</h2>
+
+<p>I took a lot of things from people smarter than I, here they are:
+<a href="http://www.sitepoint.com/functional-programming-techniques-with-ruby-part-ii/">Functional Programming Techniques With Ruby: Part II</a></p>
+
+<p><a href="http://javascriptissexy.com/javascript-apply-call-and-bind-methods-are-essential-for-javascript-professionals/">JavaScript’s Apply, Call, and Bind Methods are Essential for JavaScript Professionals</a></p>
+
+<p><a href="https://rubymonk.com/learning/books/4-ruby-primer-ascent/chapters/18-blocks/lessons/64-blocks-procs-lambdas">Ruby Monk on Blocks Procs and Lambdas</a></p>
+
+<p><a href="http://awaxman11.github.io/blog/2013/08/05/what-is-the-difference-between-a-block/">What Is the Difference Between a Block, a Proc, and a Lambda in Ruby? (I actually think this is a former flatiron blog)</a></p>
+]]></content>
+  </entry>
+  
+  <entry>
+    <title type="html"><![CDATA[Deploying Sinatra to Heroku, or How I Learned to Stop Worrying and Love Postgres]]></title>
+    <link href="http://aemrox.github.io/blog/2016/01/04/deploying-to-heroku/"/>
+    <updated>2016-01-04T13:27:07-05:00</updated>
+    <id>http://aemrox.github.io/blog/2016/01/04/deploying-to-heroku</id>
+    <content type="html"><![CDATA[<p>Ahh, my first foray into placing something on the real webs. I hope that one day I look back on this as a fond learning experience, with much nostalgia on how much I had ahead of me. But to be real, the path to that day seems as fraught and horrible as my path to getting this goddamn site up. To keep it brief, I not only suffered, but tortured my dog with many violent outbursts of fervent cussing.</p>
+
+<p>Where to begin?</p>
+
+<p>Let&rsquo;s start with what Heroku is. The wikipedia definition is a cloud platform-as-a-service. In plain old english, it&rsquo;s a way to host and serve your code online. Heroku is lots of web servers (called dynos) which are capable of holding your code, running it, and serving it to people who want to use it. It supports lots of different languages and frameworks, and can even provide you with any nuts and bolts your app might need (like security or databases). Up to a certain point, it&rsquo;s free and a great way for us to deploy our websites in a professional, scalable manner.</p>
+
+<h2>Heroku&rsquo;s Documentation</h2>
+
+<p>In short, the documentation is good. They do a great job of explaining, in a couple simple steps, how to get a rails app up and running with little to no effort.</p>
+
+<p>Once you <a href="https://signup.heroku.com/signup/dc">sign up for a Heroku account</a> and download the <a href="https://devcenter.heroku.com/articles/getting-started-with-ruby#set-up">toolkit</a> you can upload an app with a few short command line requests:</p>
+
+<p><code>$ heroku login</code></p>
+
+<p>will bring up a field where you can enter the credentials for the account you created. Then, after navigating to repository of your app in your terminal, you can create a new app with the following command:</p>
+
+<p><code>$ heroku create my_awesome_app</code></p>
+
+<p>Now, all that&rsquo;s left to do is deploy your code. Luckily, heroku integrates seamlessly with git, so if you have a repository ready, you can push your entire codebase up with:</p>
+
+<p><code>$ git push heroku master</code></p>
+
+<p>If it seems to good to be true, that&rsquo;s because it is. The problem is, we are not using rails, we are using Sinatra - and on top of that, we&rsquo;re using the Tyrion Lanister of databases - sqlite3. It&rsquo;s totally functional, but it does not scale at all.</p>
+
+<p style="text-align:center;"><img src="https://media4.giphy.com/media/Gqy93G8Ezezny/200.gif" alt="Tyrion" /></p>
+
+<h2>Development Vs. Production</h2>
+
+<p>Working with Sinatra and Heroku requires a lot of rejiggering. First off, you&rsquo;re going to need a few more gems, and you are going to need to start to really demarcate the difference between your Development and Production environments. Right now, we&rsquo;ve largely been working in what is considered Development environments.</p>
+
+<p>An environment is the tier to which your code is deployed, or in short, where your code &ldquo;lives&rdquo;. The definition of a development environment is pretty loose, but in general it is an environment where code can be changed freely. No thought has to be given to making changes in the development environment because it&rsquo;s usually isolated, or running on a single server or machine. In our case, our development environment is our computer.</p>
+
+<p>However, now that we are considering serving our web application to other people, and hosting in on heroku where it can be accessed by just about anyone, we have to rethink what our code is. It is no longer this malleable hunk of clay that we can change at will. It needs to be stable, and a lot of thought needs to go into how and when it is changed. Heroku is a production environment, one where the code and application is publicly accessible, or actively serving it&rsquo;s purpose.</p>
+
+<p>In big companies, there are generally steps in between Development and Production (such as testing, quality assurance and staging), but for now let&rsquo;s focus on these two. So what does this mean for us? It means we have to start thinking about what it means to push something up to production. It&rsquo;s time to get serious.</p>
+
+<p style="text-align:center;"><img src="https://cf.geekdo-images.com/images/pic323510.jpg" alt="warning shot" /></p>
+
+<h2>Getting with the Postgres</h2>
+
+<p>According to heroku, SQLite3 is not a production-grade database. Their reasoning as sound, and can be <a href="https://devcenter.heroku.com/articles/sqlite3">read here</a> if you are interested.</p>
+
+<p>This means we are going to have to upgrade our databases. Postgres is fairly easy to get your hands on, it&rsquo;s open source and readily available. You might already have it installed.</p>
+
+<p>If you don&rsquo;t you can do so by typing in:</p>
+
+<p><code>brew install postgres</code></p>
+
+<p>Now, we need to make sure that your postgres db launches automatically. There is a good guide <a href="http://www.tunnelsup.com/setting-up-postgres-on-mac-osx">here</a>, which I&rsquo;ll summarize quickly.</p>
+
+<p>After you&rsquo;ve gotten postgres installed via brew, open it up in your finder and make sure it&rsquo;s running on your computer. Then you need to initialize your database, using the following command:</p>
+
+<p><code>initdb /usr/local/var/postgres</code></p>
+
+<p>You can continue following the instructions in order to get postgres to launch automatically, however, if you have it up and running right now, we can move on.</p>
+
+<h2>Sinatra, you sweet, sweet lightweight fool</h2>
+
+<p>This is where Sinatra falls short of Rails. Rails takes care of a lot of the plumbing for you, but in Sinatra, we are going to have to do it ourselves.</p>
+
+<p>After including the &lsquo;pg&rsquo; gem in our gemfile, we are going to need to create a database.yml file in your config folder, right next to environment.rb.</p>
+
+<p style="text-align:center;"><img src="http://i.imgur.com/TFZMqmw.png" alt="Database.yml in action" /></p>
+
+<p>Here is a sample yaml file that serves as a decent template.</p>
+
+<pre><code class="yaml">default: &amp;default
+  adapter: postgresql
+  pool: 5
+  encoding: UTF8
+  timeout: 5000
+  port: 5432
+
+development:
+  &lt;&lt;: *default
+  username: &lt;%= ENV['PG_USER'] %&gt;
+  password: &lt;%= ENV['PG_PASS'] %&gt;
+  database: db/my_db_development
+
+test:
+  &lt;&lt;: *default
+  database: db/my_db_test
+
+production:
+  url: &lt;%= ENV["DATABASE_URL"] %&gt;
+</code></pre>
+
+<p>Two notes, the PG_USER and PG_PASS are environment variables that need to be set in your bash profile, thusly:</p>
+
+<p><code>export PG_USER = 'flatiron'</code>
+<code>export PG_PASS = 'learnlovecode'</code></p>
+
+<p>You know, for safety reasons.</p>
+
+<p>Second, the last line in this file is important for working with Heroku. Heroku will give your app an ENV (short for environment) hash with some data. In that hash is the database url, and will be essential for connecting the instance of a postgres db that heroku provides with your app.</p>
+
+<p>Now we need to make sure that your gem file is divided into a development group, and includes the proper postgres gems. You will also need to include the &lsquo;pg&rsquo; gem, which will act as your adapter between active record and postgres - much like our sqlite3 gem has done up until now.</p>
+
+<p>Heroku REALLY hates sqlite. Make sure you delete the sqlite3 gem from any mention in your gemfile. Also, go into your Gemfile.lock and delete any mentions of sqlite3 to remove any accidental dependencies (or just delete your Gemfile.lock). Make sure to run bundle install before you try to redeploy.</p>
+
+<pre><code class="Ruby">source "https://rubygems.org"
+
+ruby '2.2.3'
+gem 'sinatra'
+gem 'activerecord'
+gem 'sinatra-activerecord'
+gem 'sinatra-flash'
+gem 'sinatra-redirect-with-flash'
+gem 'rake'
+
+#postgres!
+gem 'postgresql'
+gem 'pg'
+
+group :development do
+    gem 'pry'
+    gem 'pry-nav'
+  gem 'rspec'
+    gem 'tux'
+end
+</code></pre>
+
+<p>Next we move on to making the connection with active record. In your config/environment file, you will have to do some extra work to connect to postgres and make it compliant with Heroku. I took this piece of code from a <a href="http://mherman.org/blog/2013/06/08/designing-with-class-sinatra-plus-postgresql-plus-heroku/#.VonyepMrJE5">great guide for getting Sinatra to work with Postgres and Heroku</a>, so credit where credit is due.</p>
+
+<pre><code class="Ruby">require 'bundler'
+Bundler.require(:default, :development, :production)
+
+configure :production, :development do
+  db =  URI.parse(ENV['DATABASE_URL'] || 'postgres://localhost/[the name you gave your db in your yaml file]')
+#  db =  'postgres://localhost/topofthemorning_development'
+
+  ActiveRecord::Base.establish_connection(
+    :adapter  =&gt; db.scheme == 'postgres' ? 'postgresql' : db.scheme,
+    :host     =&gt; db.host,
+    :username =&gt; db.user,
+    :password =&gt; db.password,
+    :database =&gt; db.path[1..-1],
+    :encoding =&gt; 'UTF8'
+
+  )
+end
+
+require_relative '../app/controllers/application_controller.rb'
+require_all 'app/models'
+
+require "open-uri"
+require "json"
+</code></pre>
+
+<p>The fifth line of code sets the database connection. It first checks to see if it&rsquo;s being served with a url (which we received from Heroku and assigned in our database.yml file), otherwise it uses the database we set up in our yml file.</p>
+
+<p>As another note, make sure you name your local db on the other end of the || the same as you did in the database.yml file.</p>
+
+<p>And that should do it! Your postgres db should be running locally just fine (really you should probably check). You can redeploy your app to heroku (with the <code>git push heroku master</code> command) and it should be up and running!</p>
+
+<p>Keep in mind if your db has any data in it before, it will be gone now!</p>
+
+<h2>Full Disclosure</h2>
+
+<p>I did not get this far on my own at all. Seriously, as of first writing this, my shit still didn&rsquo;t work. Thanks to help from some awesome people (thanks Sophie and Joe!), I&rsquo;ve gotten it up and running.</p>
+
+<p>However, that being said, I have a few pitfalls to avoid and few hints to give you so you can dodge the cesspit I found myself mired in for a few days.</p>
+
+<ol>
+<li>When you make changes to your code, you need to push them up to git before you push them up to heroku. When you push to Heroku, it&rsquo;s coming from your git repository, not your local files.</li>
+<li>Postgres is a lot stricter on the &lsquo;foreign key&rsquo; constraint. If you write your migrations with belongs_to relationships, and define foreign keys, make sure that the table already exists in a previous migration. Sqlite3 will let that shit slide, but postgres is a lot less forgiving.</li>
+<li>Pry doesn&rsquo;t work in your heroku! If you&rsquo;re code is broken it is much harder to fix once in a production environment. SO - a solid tip is make sure your code is working before you deploy it.</li>
+<li>So Pry doesn&rsquo;t work, but you can still do some spot debugging by writing some rake tasks. For instance, if I want to see what&rsquo;s going on in my environment db, I can write some rake tasks to display the contents of a few of my models.</li>
+<li>Rake tasks are an awesome way to interact with your code in general once it&rsquo;s in environment, having some tasks is a great way to do some maintenancy things, like clearing your db, or resetting a user, etc.</li>
+<li>Make sure to set your public folder explicitly in your app controller! Otherwise, heroku will not serve your CSS, images, or any other files you link to your html from your public folder. Do so like this right in your application controller:
+<code>Ruby
+set :public_folder, File.join(root, "../../public")
+</code></li>
+</ol>
+
+
+<p>That&rsquo;s all I got guys, hopefully, once you tune in next time this will be further down the road. You know what they say, when you shoot for the stars and miss, at least you still have cat gifs:</p>
+
+<p style="text-align:center;"><img src="https://media0.giphy.com/media/jO161HOYUPKEM/200.gif" alt="failcat" /></p>
+]]></content>
+  </entry>
+  
+  <entry>
+    <title type="html"><![CDATA[The Wonderful World of Regex]]></title>
+    <link href="http://aemrox.github.io/blog/2015/12/08/the-wonderful-world-of-regex/"/>
+    <updated>2015-12-08T13:52:56-05:00</updated>
+    <id>http://aemrox.github.io/blog/2015/12/08/the-wonderful-world-of-regex</id>
+    <content type="html"><![CDATA[<p>While working on my last project, our main goal was solving one very difficult problem.</p>
+
+<p>While ingesting around 1,000 articles a day, we needed to add some semblance of location data to each one of those articles. When we first launched, this was done by me. Manually. All. Goddamn. Day.</p>
+
+<p>I would manually scan the article for some kind of address, or area (like 5th ave between 42nd and 43rd). We noticed that I was following very similar patterns - addresses are generally clean patterns, and areas often use the same prepositions over and over again. My partner figured that we could begin parsing these texts automatically with a series of rules.</p>
+
+<p>Since I was not any kind of developer at the time, I was less involved with the coding of the solution, but one way I was able to chip in was in writing the logic of finding these phrases through something called Regex.</p>
+
+<p>Regex stands for Regular Expressions, and is a very powerful tool used for identifying, matching and capturing certain patterns in text and strings.</p>
+
+<p>We would write regular expressions to begin automatically filtering and flagging the articles we were pulling in for items that didn’t fit what we were doing, like sponsored advertising:</p>
+
+<p><code>/sponsored/i</code></p>
+
+<p>But more importantly, we wrote a series of expressions that would look for the prepositions connecting areas, or the patterns of addresses. Here are some of the finished products:</p>
+
+<p><code>\b([0-9]+ (West|W|East|E|North|N|South|S) [0-9]+(st|nd|rd|th))\b</code></p>
+
+<p><code>((East|West)? ?([0-9]+|[A-Z][a-z]+|first|second|third|[a-z]+th)(st|th|nd|rd)? ?(Road|road|rd|Rd|Street|street|St|st|Avenue|avenue|Ave|ave|Place|place|Pl|pl|Parkway|parkway|pk|Pkwy|pkwy|Drive|drive|Dr|dr|Boulevard|boulevard|Blvd|blvd|Way|way|Lane|lane|Ln|ln|Court|court|Plaza|plaza|Square|Terrace|terrace)) +(near|and|at) +(Avenue [A-Z])\b</code></p>
+
+<p>But let’s not get ahead of ourselves. Let’s start with the basics of Regex.</p>
+
+<h3>How it works</h3>
+
+<p>At its most basic, regex is just writing expressions that try to match combinations of characters. Every string can be broken down into characters, so we should be able to codify some kind of logic that allows us to build up every combination we see in the real world. That’s what the regex engine does.</p>
+
+<p>Ruby recognizes regular expressions when you offset them by two backslashes, or with %r()</p>
+
+<p><code>/this is a regex expression/  
+%r(and this is to!)</code></p>
+
+<p>and these expressions can be entered in String.#methods such as #Scan or #Split</p>
+
+<h2>Basic Rules</h2>
+
+<p>Regex recognizes all of our basic characters, so if you were to just type in a word it would match:</p>
+
+<p><img src="https://github.com/Aemrox/aemrox.github.io/blob/source/source/images/Basic%20Match.png?raw=true" alt="Basic Match Image" /></p>
+
+<p>There are also modifiers that you can add to the end of expressions, such as “i”, which allows you to recognize any case:</p>
+
+<p>![Case Capture Image]<a href="https://github.com/Aemrox/aemrox.github.io/blob/source/source/images/Case%20Match.png?raw=true">https://github.com/Aemrox/aemrox.github.io/blob/source/source/images/Case%20Match.png?raw=true</a></p>
+
+<p>You can also capture ranges of characters. Capture any lower case character with the following syntax:</p>
+
+<p><img src="https://github.com/Aemrox/aemrox.github.io/blob/source/source/images/Range%20Match.png?raw=true" alt="match all lower case letters" /></p>
+
+<p>the little g modifier at the ends means it is global, and will match every instance across the string. If we were to remove it, it would only match the first instance.</p>
+
+<p>Beyond basic characters, you can also match punctuation and white space by using escape characters:</p>
+
+<p><img src="https://github.com/Aemrox/aemrox.github.io/blob/source/source/images/Periods.png?raw=true" alt="periods" />
+<img src="https://github.com/Aemrox/aemrox.github.io/blob/source/source/images/White%20Space.png?raw=true" alt="whitesspace" /></p>
+
+<p>The reason for needing the escape character is that there are special characters which denote larger sets, such as the “.” which matches any character</p>
+
+<p><img src="https://github.com/Aemrox/aemrox.github.io/blob/source/source/images/Dot.png?raw=true" alt="Dot" /></p>
+
+<p>There are also some special characters that regex uses to look at more complex concepts, such as words characters
+\w for words!
+<img src="https://github.com/Aemrox/aemrox.github.io/blob/source/source/images/word%20characters.png?raw=true" alt="words characters" /></p>
+
+<p>You can also do the same for digits with \d</p>
+
+<p><img src="https://github.com/Aemrox/aemrox.github.io/blob/source/source/images/digits.png?raw=true" alt="digits" /></p>
+
+<h2>Capture Groups</h2>
+
+<p>Everything we have been doing so far has been restricted to matching a single phrase. However, regex has a lot more potential than just that. You can instruct an expression to group certain matches, or even break down a phrase by using what are called capture groups.</p>
+
+<p>These are particularly useful when using a string method like #scan, which utlizes these groups and places them as separate entries in an array.</p>
+
+<p>You create a group by placing a parenthessis around what you are looking to capture. a parenthesis captures only an entire phrase.</p>
+
+<p><img src="https://cdn-images-1.medium.com/max/800/1*AdPVsSKG1taPW7zJgRoFrA.png" alt="Basic Capture Group" /></p>
+
+<p>However, you can also define a capture group with brackets, which will match any character in the group.</p>
+
+<p><img src="https://raw.githubusercontent.com/Aemrox/aemrox.github.io/master/images/Case%20Match.png" alt="Capture using Brackets" /></p>
+
+<p>These kinds of expressions are excellent for splitting up strings. The following piece of code does a decent job of splitting up strings by sentences. See if you can decipher the regex!</p>
+
+<p><code>“Check out my sentence! Here’s another. And another?”.split(/[.!?]/)</code></p>
+
+<h2>Quantifiers</h2>
+
+<p>Unless otherwise specified - most capture groups will capture each instance of a match as an individual capture. However, we can use several quantifiers to modify how capture groups behave and give them more (or less) flexibility</p>
+
+<p>If we look back at our expression to split strings, it works pretty well, but fails if we have two periods in a row:</p>
+
+<p><code>string = "This. should. split well... but it doesnt!!".split(/[.!?]/)  # =&gt; ["This", " should", " split", "", " but it doesnt"]</code></p>
+
+<p>This doesn’t do exactly what we want because the capture group is matching each occurrence of the expression. We can fix this with the + quantifier. The + quantifier can be appended to a capture group to make it match 1 or more occurrences of the expression. This will chain all occurrences of the capture group that occur side by side into one capture. So we can fix our code like this:</p>
+
+<p><code>"This. should. split well... and it does!!!".split(/[.!?]+/)  # =&gt; ["This", " should", " split well", " and it does"]</code></p>
+
+<p>Another excellent modifier is the * or splat. When placed inside a capture group, it takes the preceeding token, and tells regex to match as many of these as possible.</p>
+
+<p><img src="https://github.com/Aemrox/aemrox.github.io/blob/source/source/images/Splat.png?raw=true" alt="Splat" /></p>
+
+<p>One more modifier that I think is really good to go over is the ?. It is called the optional modifier. What it means is capture 0 or 1 of the preceding token. Here it is in action:</p>
+
+<p><img src="https://github.com/Aemrox/aemrox.github.io/blob/source/source/images/Optional%20Modifier.png?raw=true" alt="optional modifier" /></p>
+
+<p>However, ? can also mean lazy, which we’ll dive into below.</p>
+
+<h2>Greedy Vs. Lazy</h2>
+
+<p>This is one of the tougher concepts to grasp in Regex, at least for me, so I’m going to do my best to explain it.</p>
+
+<p>the * quantifier is called the “greedy” quantifier. It will take as many characters as necessary to create a capture group. To understand this, look at the following string.</p>
+
+<p>“You are becoming quite skilled, young grasshopper,” said Steven with glowing admiration in his eyes. “quite skilled indeed.”</p>
+
+<p>If I wanted a regex expression to match “anything between the quotes” - it actually has several groups it could capture. It could do both traditional quotes (as we see them), it could take the inverse, which is the area between the 2nd and 3rd quotation mark, or it could take the whole sentence.</p>
+
+<p>So a * tells regex, take as many characters as possible, or, be greedy.</p>
+
+<p>This is best displayed below:</p>
+
+<p><img src="https://github.com/Aemrox/aemrox.github.io/blob/source/source/images/Greedy.png?raw=true" alt="greedy" /></p>
+
+<p>This doesn’t get us all the text in quotations as we see them. B ecause we placed a * quantifier, it matches as many characters as possible.</p>
+
+<p>if ? is used on another quantifier, it can be made to make the group “lazy” or match as few characters as possible to make the capture effective. This is a bit of a mental leap, so just look at it in action below.</p>
+
+<p><img src="https://github.com/Aemrox/aemrox.github.io/blob/source/source/images/Lazy.png?raw=true" alt="lazy" /></p>
+
+<p>There are a ton of amazing things regex can do, way too much to go over in one blog post. But hopefully this gives you guys a good start, and if this sparked your interest, keep reading for a few great resources to learn more on your own!</p>
+
+<p><a href="http://regexr.com/">http://regexr.com/</a> - how I did some of the images</p>
+
+<p><a href="http://rubular.com/">http://rubular.com/</a> - the right tool to use to build regex for Ruby, uses the same engine.</p>
+
+<p><a href="http://regexone.com/">http://regexone.com/</a> - a great tutorial that Kaylee found! Thanks Kaylee.</p>
+
+<p><a href="https://regex101.com/">https://regex101.com/</a> - from Derek. Thanks Derek&hellip;</p>
+
+<p><a href="http://www.rexegg.com/">http://www.rexegg.com/</a> - for those of you looking to master the whole thing and see how far down the rabbit whole you can go.</p>
+]]></content>
+  </entry>
+  
+</feed>

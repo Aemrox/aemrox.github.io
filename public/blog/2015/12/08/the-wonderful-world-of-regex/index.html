@@ -1,0 +1,343 @@
+
+<!DOCTYPE html>
+<!--[if IEMobile 7 ]><html class="no-js iem7"><![endif]-->
+<!--[if lt IE 9]><html class="no-js lte-ie8"><![endif]-->
+<!--[if (gt IE 8)|(gt IEMobile 7)|!(IEMobile)|!(IE)]><!--><html class="no-js" lang="en"><!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <title>The Wonderful World of Regex - Ride or Pry</title>
+  <meta name="author" content="Adam May">
+
+  
+  <meta name="description" content="While working on my last project, our main goal was solving one very difficult problem. While ingesting around 1,000 articles a day, we needed to add &hellip;">
+  
+
+  <!-- http://t.co/dKP3o1e -->
+  <meta name="HandheldFriendly" content="True">
+  <meta name="MobileOptimized" content="320">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  
+  <link rel="canonical" href="http://aemrox.github.io/blog/2015/12/08/the-wonderful-world-of-regex/">
+  <link href="/favicon.png" rel="icon">
+  <link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet" type="text/css">
+  <link href="/atom.xml" rel="alternate" title="Ride or Pry" type="application/atom+xml">
+  <script src="/javascripts/modernizr-2.0.js"></script>
+  <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+  <script>!window.jQuery && document.write(unescape('%3Cscript src="/javascripts/libs/jquery.min.js"%3E%3C/script%3E'))</script>
+  <script src="/javascripts/octopress.js" type="text/javascript"></script>
+  <!--Fonts from Google"s Web font directory at http://google.com/webfonts -->
+<link href="//fonts.googleapis.com/css?family=PT+Serif:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+<link href="//fonts.googleapis.com/css?family=PT+Sans:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+
+  
+
+</head>
+
+<body   >
+  <header role="banner"><hgroup>
+  <h1><a href="/">Ride or Pry</a></h1>
+  
+    <h2>Coding Ride it out or Pry trying</h2>
+  
+</hgroup>
+
+</header>
+  <nav role="navigation"><ul class="subscription" data-subscription="rss">
+  <li><a href="/atom.xml" rel="subscribe-rss" title="subscribe via RSS">RSS</a></li>
+  
+</ul>
+  
+<form action="https://www.google.com/search" method="get">
+  <fieldset role="search">
+    <input type="hidden" name="sitesearch" value="aemrox.github.io">
+    <input class="search" type="text" name="q" results="0" placeholder="Search"/>
+  </fieldset>
+</form>
+  
+<ul class="main-navigation">
+  <li><a href="/">Blog</a></li>
+  <li><a href="/blog/archives">Archives</a></li>
+</ul>
+
+</nav>
+  <div id="main">
+    <div id="content">
+      <div>
+<article class="hentry" role="article">
+  
+  <header>
+    
+      <h1 class="entry-title">The Wonderful World of Regex</h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+<time class='entry-date' datetime='2015-12-08T13:52:56-05:00'><span class='date'><span class='date-month'>Dec</span> <span class='date-day'>8</span><span class='date-suffix'>th</span>, <span class='date-year'>2015</span></span> <span class='time'>1:52 pm</span></time>
+        
+      </p>
+    
+  </header>
+
+
+<div class="entry-content"><p>While working on my last project, our main goal was solving one very difficult problem.</p>
+
+<p>While ingesting around 1,000 articles a day, we needed to add some semblance of location data to each one of those articles. When we first launched, this was done by me. Manually. All. Goddamn. Day.</p>
+
+<p>I would manually scan the article for some kind of address, or area (like 5th ave between 42nd and 43rd). We noticed that I was following very similar patterns - addresses are generally clean patterns, and areas often use the same prepositions over and over again. My partner figured that we could begin parsing these texts automatically with a series of rules.</p>
+
+<p>Since I was not any kind of developer at the time, I was less involved with the coding of the solution, but one way I was able to chip in was in writing the logic of finding these phrases through something called Regex.</p>
+
+<p>Regex stands for Regular Expressions, and is a very powerful tool used for identifying, matching and capturing certain patterns in text and strings.</p>
+
+<p>We would write regular expressions to begin automatically filtering and flagging the articles we were pulling in for items that didn’t fit what we were doing, like sponsored advertising:</p>
+
+<p><code>/sponsored/i</code></p>
+
+<p>But more importantly, we wrote a series of expressions that would look for the prepositions connecting areas, or the patterns of addresses. Here are some of the finished products:</p>
+
+<p><code>\b([0-9]+ (West|W|East|E|North|N|South|S) [0-9]+(st|nd|rd|th))\b</code></p>
+
+<p><code>((East|West)? ?([0-9]+|[A-Z][a-z]+|first|second|third|[a-z]+th)(st|th|nd|rd)? ?(Road|road|rd|Rd|Street|street|St|st|Avenue|avenue|Ave|ave|Place|place|Pl|pl|Parkway|parkway|pk|Pkwy|pkwy|Drive|drive|Dr|dr|Boulevard|boulevard|Blvd|blvd|Way|way|Lane|lane|Ln|ln|Court|court|Plaza|plaza|Square|Terrace|terrace)) +(near|and|at) +(Avenue [A-Z])\b</code></p>
+
+<p>But let’s not get ahead of ourselves. Let’s start with the basics of Regex.</p>
+
+<h3>How it works</h3>
+
+<p>At its most basic, regex is just writing expressions that try to match combinations of characters. Every string can be broken down into characters, so we should be able to codify some kind of logic that allows us to build up every combination we see in the real world. That’s what the regex engine does.</p>
+
+<p>Ruby recognizes regular expressions when you offset them by two backslashes, or with %r()</p>
+
+<p><code>/this is a regex expression/  
+%r(and this is to!)</code></p>
+
+<p>and these expressions can be entered in String.#methods such as #Scan or #Split</p>
+
+<h2>Basic Rules</h2>
+
+<p>Regex recognizes all of our basic characters, so if you were to just type in a word it would match:</p>
+
+<p><img src="https://github.com/Aemrox/aemrox.github.io/blob/source/source/images/Basic%20Match.png?raw=true" alt="Basic Match Image" /></p>
+
+<p>There are also modifiers that you can add to the end of expressions, such as “i”, which allows you to recognize any case:</p>
+
+<p>![Case Capture Image]<a href="https://github.com/Aemrox/aemrox.github.io/blob/source/source/images/Case%20Match.png?raw=true">https://github.com/Aemrox/aemrox.github.io/blob/source/source/images/Case%20Match.png?raw=true</a></p>
+
+<p>You can also capture ranges of characters. Capture any lower case character with the following syntax:</p>
+
+<p><img src="https://github.com/Aemrox/aemrox.github.io/blob/source/source/images/Range%20Match.png?raw=true" alt="match all lower case letters" /></p>
+
+<p>the little g modifier at the ends means it is global, and will match every instance across the string. If we were to remove it, it would only match the first instance.</p>
+
+<p>Beyond basic characters, you can also match punctuation and white space by using escape characters:</p>
+
+<p><img src="https://github.com/Aemrox/aemrox.github.io/blob/source/source/images/Periods.png?raw=true" alt="periods" />
+<img src="https://github.com/Aemrox/aemrox.github.io/blob/source/source/images/White%20Space.png?raw=true" alt="whitesspace" /></p>
+
+<p>The reason for needing the escape character is that there are special characters which denote larger sets, such as the “.” which matches any character</p>
+
+<p><img src="https://github.com/Aemrox/aemrox.github.io/blob/source/source/images/Dot.png?raw=true" alt="Dot" /></p>
+
+<p>There are also some special characters that regex uses to look at more complex concepts, such as words characters
+\w for words!
+<img src="https://github.com/Aemrox/aemrox.github.io/blob/source/source/images/word%20characters.png?raw=true" alt="words characters" /></p>
+
+<p>You can also do the same for digits with \d</p>
+
+<p><img src="https://github.com/Aemrox/aemrox.github.io/blob/source/source/images/digits.png?raw=true" alt="digits" /></p>
+
+<h2>Capture Groups</h2>
+
+<p>Everything we have been doing so far has been restricted to matching a single phrase. However, regex has a lot more potential than just that. You can instruct an expression to group certain matches, or even break down a phrase by using what are called capture groups.</p>
+
+<p>These are particularly useful when using a string method like #scan, which utlizes these groups and places them as separate entries in an array.</p>
+
+<p>You create a group by placing a parenthessis around what you are looking to capture. a parenthesis captures only an entire phrase.</p>
+
+<p><img src="https://cdn-images-1.medium.com/max/800/1*AdPVsSKG1taPW7zJgRoFrA.png" alt="Basic Capture Group" /></p>
+
+<p>However, you can also define a capture group with brackets, which will match any character in the group.</p>
+
+<p><img src="https://raw.githubusercontent.com/Aemrox/aemrox.github.io/master/images/Case%20Match.png" alt="Capture using Brackets" /></p>
+
+<p>These kinds of expressions are excellent for splitting up strings. The following piece of code does a decent job of splitting up strings by sentences. See if you can decipher the regex!</p>
+
+<p><code>“Check out my sentence! Here’s another. And another?”.split(/[.!?]/)</code></p>
+
+<h2>Quantifiers</h2>
+
+<p>Unless otherwise specified - most capture groups will capture each instance of a match as an individual capture. However, we can use several quantifiers to modify how capture groups behave and give them more (or less) flexibility</p>
+
+<p>If we look back at our expression to split strings, it works pretty well, but fails if we have two periods in a row:</p>
+
+<p><code>string = "This. should. split well... but it doesnt!!".split(/[.!?]/)  # =&gt; ["This", " should", " split", "", " but it doesnt"]</code></p>
+
+<p>This doesn’t do exactly what we want because the capture group is matching each occurrence of the expression. We can fix this with the + quantifier. The + quantifier can be appended to a capture group to make it match 1 or more occurrences of the expression. This will chain all occurrences of the capture group that occur side by side into one capture. So we can fix our code like this:</p>
+
+<p><code>"This. should. split well... and it does!!!".split(/[.!?]+/)  # =&gt; ["This", " should", " split well", " and it does"]</code></p>
+
+<p>Another excellent modifier is the * or splat. When placed inside a capture group, it takes the preceeding token, and tells regex to match as many of these as possible.</p>
+
+<p><img src="https://github.com/Aemrox/aemrox.github.io/blob/source/source/images/Splat.png?raw=true" alt="Splat" /></p>
+
+<p>One more modifier that I think is really good to go over is the ?. It is called the optional modifier. What it means is capture 0 or 1 of the preceding token. Here it is in action:</p>
+
+<p><img src="https://github.com/Aemrox/aemrox.github.io/blob/source/source/images/Optional%20Modifier.png?raw=true" alt="optional modifier" /></p>
+
+<p>However, ? can also mean lazy, which we’ll dive into below.</p>
+
+<h2>Greedy Vs. Lazy</h2>
+
+<p>This is one of the tougher concepts to grasp in Regex, at least for me, so I’m going to do my best to explain it.</p>
+
+<p>the * quantifier is called the “greedy” quantifier. It will take as many characters as necessary to create a capture group. To understand this, look at the following string.</p>
+
+<p>“You are becoming quite skilled, young grasshopper,” said Steven with glowing admiration in his eyes. “quite skilled indeed.”</p>
+
+<p>If I wanted a regex expression to match “anything between the quotes” - it actually has several groups it could capture. It could do both traditional quotes (as we see them), it could take the inverse, which is the area between the 2nd and 3rd quotation mark, or it could take the whole sentence.</p>
+
+<p>So a * tells regex, take as many characters as possible, or, be greedy.</p>
+
+<p>This is best displayed below:</p>
+
+<p><img src="https://github.com/Aemrox/aemrox.github.io/blob/source/source/images/Greedy.png?raw=true" alt="greedy" /></p>
+
+<p>This doesn’t get us all the text in quotations as we see them. B ecause we placed a * quantifier, it matches as many characters as possible.</p>
+
+<p>if ? is used on another quantifier, it can be made to make the group “lazy” or match as few characters as possible to make the capture effective. This is a bit of a mental leap, so just look at it in action below.</p>
+
+<p><img src="https://github.com/Aemrox/aemrox.github.io/blob/source/source/images/Lazy.png?raw=true" alt="lazy" /></p>
+
+<p>There are a ton of amazing things regex can do, way too much to go over in one blog post. But hopefully this gives you guys a good start, and if this sparked your interest, keep reading for a few great resources to learn more on your own!</p>
+
+<p><a href="http://regexr.com/">http://regexr.com/</a> - how I did some of the images</p>
+
+<p><a href="http://rubular.com/">http://rubular.com/</a> - the right tool to use to build regex for Ruby, uses the same engine.</p>
+
+<p><a href="http://regexone.com/">http://regexone.com/</a> - a great tutorial that Kaylee found! Thanks Kaylee.</p>
+
+<p><a href="https://regex101.com/">https://regex101.com/</a> - from Derek. Thanks Derek&hellip;</p>
+
+<p><a href="http://www.rexegg.com/">http://www.rexegg.com/</a> - for those of you looking to master the whole thing and see how far down the rabbit whole you can go.</p>
+</div>
+
+
+  <footer>
+    <p class="meta">
+      
+  
+
+<span class="byline author vcard">Posted by <span class="fn">Adam May</span></span>
+
+      
+
+
+
+
+<time class='entry-date' datetime='2015-12-08T13:52:56-05:00'><span class='date'><span class='date-month'>Dec</span> <span class='date-day'>8</span><span class='date-suffix'>th</span>, <span class='date-year'>2015</span></span> <span class='time'>1:52 pm</span></time>
+      
+
+<span class="categories">
+  
+    <a class='category' href='/blog/categories/flatiron/'>flatiron</a>, <a class='category' href='/blog/categories/school/'>school</a>
+  
+</span>
+
+
+    </p>
+    
+      <div class="sharing">
+  
+  <a href="//twitter.com/share" class="twitter-share-button" data-url="http://aemrox.github.io/blog/2015/12/08/the-wonderful-world-of-regex/" data-via="" data-counturl="http://aemrox.github.io/blog/2015/12/08/the-wonderful-world-of-regex/" >Tweet</a>
+  
+  
+  
+</div>
+
+    
+    <p class="meta">
+      
+        <a class="basic-alignment left" href="/blog/2015/12/02/my-first-post-on-octopress/" title="Previous Post: My First Post On Octopress">&laquo; My First Post On Octopress</a>
+      
+      
+        <a class="basic-alignment right" href="/blog/2016/01/04/deploying-to-heroku/" title="Next Post: Deploying Sinatra to Heroku, or how I learned to stop worrying and love postgres">Deploying Sinatra to Heroku, or how I learned to stop worrying and love postgres &raquo;</a>
+      
+    </p>
+  </footer>
+</article>
+
+</div>
+
+<aside class="sidebar">
+  
+    <section>
+  <h1>Recent Posts</h1>
+  <ul id="recent_posts">
+    
+      <li class="post">
+        <a href="/blog/2016/02/11/real-time-video-chat-on-rails-using-webrtc/">Real-Time Video Chat on Rails Using WebRTC</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2016/02/03/ruby-fied-javascript-currying/">Ruby-fied Javascript Part II: Currying</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2016/01/25/ruby-fied-javascript-first-class-functions/">Ruby-fied Javascript Part I: First Class Functions</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2016/01/04/deploying-to-heroku/">Deploying Sinatra to Heroku, or How I Learned to Stop Worrying and Love Postgres</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2015/12/08/the-wonderful-world-of-regex/">The Wonderful World of Regex</a>
+      </li>
+    
+  </ul>
+</section>
+
+
+
+
+
+  
+</aside>
+
+
+    </div>
+  </div>
+  <footer role="contentinfo"><p>
+  Copyright &copy; 2016 - Adam May -
+  <span class="credit">Powered by <a href="http://octopress.org">Octopress</a></span>
+</p>
+
+</footer>
+  
+
+
+
+
+
+
+
+  <script type="text/javascript">
+    (function(){
+      var twitterWidgets = document.createElement('script');
+      twitterWidgets.type = 'text/javascript';
+      twitterWidgets.async = true;
+      twitterWidgets.src = '//platform.twitter.com/widgets.js';
+      document.getElementsByTagName('head')[0].appendChild(twitterWidgets);
+    })();
+  </script>
+
+
+
+
+
+</body>
+</html>

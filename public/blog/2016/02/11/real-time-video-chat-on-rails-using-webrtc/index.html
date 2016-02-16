@@ -1,0 +1,678 @@
+
+<!DOCTYPE html>
+<!--[if IEMobile 7 ]><html class="no-js iem7"><![endif]-->
+<!--[if lt IE 9]><html class="no-js lte-ie8"><![endif]-->
+<!--[if (gt IE 8)|(gt IEMobile 7)|!(IEMobile)|!(IE)]><!--><html class="no-js" lang="en"><!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <title>Real-Time Video Chat on Rails Using WebRTC - Ride or Pry</title>
+  <meta name="author" content="Adam May">
+
+  
+  <meta name="description" content="There were many parts of my past projects that I genuinely enjoyed doing. I had moments that reaffirmed my entire choice to embark on this crazy &hellip;">
+  
+
+  <!-- http://t.co/dKP3o1e -->
+  <meta name="HandheldFriendly" content="True">
+  <meta name="MobileOptimized" content="320">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  
+  <link rel="canonical" href="http://aemrox.github.io/blog/2016/02/11/real-time-video-chat-on-rails-using-webrtc/">
+  <link href="/favicon.png" rel="icon">
+  <link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet" type="text/css">
+  <link href="/atom.xml" rel="alternate" title="Ride or Pry" type="application/atom+xml">
+  <script src="/javascripts/modernizr-2.0.js"></script>
+  <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+  <script>!window.jQuery && document.write(unescape('%3Cscript src="/javascripts/libs/jquery.min.js"%3E%3C/script%3E'))</script>
+  <script src="/javascripts/octopress.js" type="text/javascript"></script>
+  <!--Fonts from Google"s Web font directory at http://google.com/webfonts -->
+<link href="//fonts.googleapis.com/css?family=PT+Serif:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+<link href="//fonts.googleapis.com/css?family=PT+Sans:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+
+  
+
+</head>
+
+<body   >
+  <header role="banner"><hgroup>
+  <h1><a href="/">Ride or Pry</a></h1>
+  
+    <h2>Coding Ride it out or Pry trying</h2>
+  
+</hgroup>
+
+</header>
+  <nav role="navigation"><ul class="subscription" data-subscription="rss">
+  <li><a href="/atom.xml" rel="subscribe-rss" title="subscribe via RSS">RSS</a></li>
+  
+</ul>
+  
+<form action="https://www.google.com/search" method="get">
+  <fieldset role="search">
+    <input type="hidden" name="sitesearch" value="aemrox.github.io">
+    <input class="search" type="text" name="q" results="0" placeholder="Search"/>
+  </fieldset>
+</form>
+  
+<ul class="main-navigation">
+  <li><a href="/">Blog</a></li>
+  <li><a href="/blog/archives">Archives</a></li>
+</ul>
+
+</nav>
+  <div id="main">
+    <div id="content">
+      <div>
+<article class="hentry" role="article">
+  
+  <header>
+    
+      <h1 class="entry-title">Real-Time Video Chat on Rails Using WebRTC</h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+<time class='entry-date' datetime='2016-02-11T16:06:41-05:00'><span class='date'><span class='date-month'>Feb</span> <span class='date-day'>11</span><span class='date-suffix'>th</span>, <span class='date-year'>2016</span></span> <span class='time'>4:06 pm</span></time>
+        
+      </p>
+    
+  </header>
+
+
+<div class="entry-content"><p>There were many parts of my past projects that I genuinely enjoyed doing. I had moments that reaffirmed my entire choice to embark on this crazy career, and moments of unadulterated joy. Building video chat was not one of those moments. But I am happy I finally got it working.</p>
+
+<p>The process was very much wading through the weeds, but now I wanted to chronicle the way I got this tech working with Rails.</p>
+
+<p>A little background on WebRTC first (I don&rsquo;t want to go too deep into it, but you should know what you&rsquo;re working with). It&rsquo;s a free open-source framework start by Google for enabling real-time communication using nothing but native web browsers. The ability to support this kind of real-time communication with a piece of software that&rsquo;s available on essentially every computer is pretty amazing - but that doesn&rsquo;t necessarily mean it&rsquo;s easy to set up.</p>
+
+<h2>The process from a Bird&rsquo;s Eye</h2>
+
+<p>Let me give you guys an overview of the technologies I used to get this up and running:</p>
+
+<ol>
+<li><a href="https://webrtc.org/">WebRTC</a></li>
+<li><a href="https://pusher.com/">Pusher</a> - a 3rd party service for establishing real-time web sockets (along with the associated js library and ruby gem)</li>
+<li><a href="https://github.com/feross/simple-peer">Simplepeer.js</a> - a javascript library for establishing secure connections between peers</li>
+<li><a href="https://github.com/otalk/hark">Hark.js</a> - a javascript library for handling audio streams as speech</li>
+</ol>
+
+
+<p>In broad strokes the process goes like this.</p>
+
+<ol>
+<li>A user enters the link that hosts the video chat and is issued a GUID (or Global Unique Identifier)</li>
+<li>The user&rsquo;s video is grabbed using webRTC&rsquo;s getUserMedia() function</li>
+<li>The user establishes a connection to a pusher channel (or if they are the first party they establish the channel themselves)</li>
+<li>The user then continually looks for any other peer&rsquo;s on the channel with whom they can connect</li>
+<li>Another user enters the channel, following the same process from steps 2 and 3</li>
+<li>Once the second member is detected, Simple Peer attempts to establish a connection between the two users</li>
+<li>With a secure connection established, pusher handles the realtime transfer of video and audio streams between the two users and the respective feeds are assigned to video outlets in the html of the page handling the chat.</li>
+<li>Use Hark to determine which channel is speaking, and ensure their video is being show.</li>
+<li>BONUS - real-time messaging is enabled using basic DOM Manipulation and the open pusher channel between the two users.</li>
+</ol>
+
+
+<p>I&rsquo;ll do my best to walk through each step of the process, exposing as much of my code as possible. Alternatively, you can just <a href="https://github.com/Aemrox/Edifi/blob/master/app/assets/javascripts/video_chat.js">take a look at the whole shebang</a></p>
+
+<p>The number of guides I used is frankly hard to count and keep track of, but I&rsquo;ll try to include the lot of them in my resources section at the bottom. However, it&rsquo;s worth shouting out the <a href="http://blog.carbonfive.com/2014/10/16/webrtc-made-simple/">number 1 resource I&rsquo;ve had in all of this: CarbonFive</a>. To be totally frank, a good portion of my code came from things this guy wrote - so this is a great source to look at if you have any holes left over from this tutorial.</p>
+
+<h2>Step 1: Hosting the channel in a specific page</h2>
+
+<p>In order for all of this to work, you need an HTML page that has the appropriate sockets (here is <a href="https://github.com/Aemrox/Edifi/blob/master/app/views/chats/chat_page.html.erb">my example</a>). In my code, the important sockets include:
+1. a Div to eventually write remote videos
+2. a ul for all videos
+3. a preloaded video element for the local video (my own video)
+4. most importantly, as a little workaround to send the pusher authentication info to the javascript, I place a little invisible div with some of the information about the pusher key. Before you scold me, I know this is insecure, but this is just getting a demo up and running.</p>
+
+<p>Last part of this step, and the first part of the javascript that will handle the whole video chat is issuing the user a GUID. This is important because we need a way to uniquely identify every member of the chat when we look for new people joining the channel.</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="kd">var</span> <span class="nx">guid</span> <span class="o">=</span> <span class="p">(</span><span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
+</span><span class='line'>  <span class="kd">function</span> <span class="nx">s4</span><span class="p">()</span> <span class="p">{</span>
+</span><span class='line'>    <span class="k">return</span> <span class="nb">Math</span><span class="p">.</span><span class="nx">floor</span><span class="p">((</span><span class="mi">1</span> <span class="o">+</span> <span class="nb">Math</span><span class="p">.</span><span class="nx">random</span><span class="p">())</span> <span class="o">*</span> <span class="mh">0x10000</span><span class="p">)</span>
+</span><span class='line'>               <span class="p">.</span><span class="nx">toString</span><span class="p">(</span><span class="mi">16</span><span class="p">)</span>
+</span><span class='line'>               <span class="p">.</span><span class="nx">substring</span><span class="p">(</span><span class="mi">1</span><span class="p">);</span>
+</span><span class='line'>  <span class="p">}</span>
+</span><span class='line'>  <span class="k">return</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
+</span><span class='line'>    <span class="k">return</span> <span class="nx">s4</span><span class="p">()</span> <span class="o">+</span> <span class="nx">s4</span><span class="p">()</span> <span class="o">+</span> <span class="s1">&#39;-&#39;</span> <span class="o">+</span> <span class="nx">s4</span><span class="p">()</span> <span class="o">+</span> <span class="s1">&#39;-&#39;</span> <span class="o">+</span> <span class="nx">s4</span><span class="p">()</span> <span class="o">+</span> <span class="s1">&#39;-&#39;</span> <span class="o">+</span>
+</span><span class='line'>           <span class="nx">s4</span><span class="p">()</span> <span class="o">+</span> <span class="s1">&#39;-&#39;</span> <span class="o">+</span> <span class="nx">s4</span><span class="p">()</span> <span class="o">+</span> <span class="nx">s4</span><span class="p">()</span> <span class="o">+</span> <span class="nx">s4</span><span class="p">();</span>
+</span><span class='line'>  <span class="p">};</span>
+</span><span class='line'><span class="p">})();</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Now I&rsquo;m sure there are better more secure ways to do this, but I essentially just generate a really big number that is incredibly unlikely to de duplicated by the next person joining the chat. Since every chat channel is a unique pusher channel, the chances of this being an issue is infinitesimally small.</p>
+
+<h2>Step 2: Grabbing the user&rsquo;s local video</h2>
+
+<p>This part is frankly fairly magical, and is part of what makes WebRTC so very cool. This is done in essentially one function:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="nx">navigator</span><span class="p">.</span><span class="nx">getUserMedia</span><span class="p">(</span><span class="nx">mediaOptions</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">stream</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>  <span class="nx">currentUser</span><span class="p">.</span><span class="nx">stream</span> <span class="o">=</span> <span class="nx">stream</span><span class="p">;</span>
+</span><span class='line'>  <span class="kd">var</span> <span class="nx">video</span> <span class="o">=</span> <span class="nx">$</span><span class="p">(</span><span class="s1">&#39;#localVideo&#39;</span><span class="p">)[</span><span class="mi">0</span><span class="p">];</span>
+</span><span class='line'>  <span class="nx">video</span><span class="p">.</span><span class="nx">src</span> <span class="o">=</span> <span class="nb">window</span><span class="p">.</span><span class="nx">URL</span><span class="p">.</span><span class="nx">createObjectURL</span><span class="p">(</span><span class="nx">stream</span><span class="p">);</span>
+</span><span class='line'>  <span class="nx">start</span><span class="p">();</span>
+</span><span class='line'><span class="p">},</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{});</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>that getUserMedia() is where all the magic happens, you feed it some options defined earlier, and it returns a callback with a stream object which holds the real-time flow from the user&rsquo;s camera. All the permissions are handled by WebRTC, all of the proper wrapping of the video stream as well. That stream can be assigned to any html5 video element, as you see on line 4 - where I grab the local video element I designed in the page, and assign the video to it. At it&rsquo;s core, that&rsquo;s how easy it is to grab video through WebRTC - the real challenge comes in connection two people together.</p>
+
+<p>Two notes before I move on:</p>
+
+<p>Here are the options that need to be defined to determine how this stream is configured:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="kd">var</span> <span class="nx">mediaOptions</span> <span class="o">=</span> <span class="p">{</span>
+</span><span class='line'>  <span class="nx">audio</span><span class="o">:</span> <span class="kc">true</span><span class="p">,</span>
+</span><span class='line'>  <span class="nx">video</span><span class="o">:</span> <span class="p">{</span>
+</span><span class='line'>    <span class="nx">mandatory</span><span class="o">:</span> <span class="p">{</span>
+</span><span class='line'>      <span class="nx">minWidth</span><span class="o">:</span> <span class="mi">1280</span><span class="p">,</span>
+</span><span class='line'>      <span class="nx">minHeight</span><span class="o">:</span> <span class="mi">720</span>
+</span><span class='line'>    <span class="p">}</span>
+</span><span class='line'>  <span class="p">}</span>
+</span><span class='line'><span class="p">};</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Second, there is another line that needs to be written to make this work across all browsers, each of which alias webRTC in slightly different ways:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="nx">navigator</span><span class="p">.</span><span class="nx">getUserMedia</span> <span class="o">=</span> <span class="nx">navigator</span><span class="p">.</span><span class="nx">getUserMedia</span> <span class="o">||</span> <span class="nx">navigator</span><span class="p">.</span><span class="nx">webkitGetUserMedia</span> <span class="o">||</span> <span class="nx">navigator</span><span class="p">.</span><span class="nx">mozGetUserMedia</span><span class="p">;</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<h2>Step 3: Establishing the Connection to Pusher</h2>
+
+<p>The first step here is to convert the user entering the channel into an object that pusher can work with. In my case, I pull the current user&rsquo;s name from the rails server with an ajax request. That user is then structured as such:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="nx">currentUser</span> <span class="o">=</span> <span class="p">{</span>
+</span><span class='line'>        <span class="nx">name</span><span class="o">:</span> <span class="nx">data</span><span class="p">.</span><span class="nx">user_name</span><span class="p">,</span>
+</span><span class='line'>        <span class="nx">id</span><span class="o">:</span> <span class="nx">guid</span><span class="p">(),</span>
+</span><span class='line'>        <span class="nx">stream</span><span class="o">:</span> <span class="kc">undefined</span> <span class="c1">//This gets defined when we pull the stream like we did in the previous section</span>
+</span><span class='line'>      <span class="p">};</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Now we need to create an object that will allow us to interact with pusher:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="kd">var</span> <span class="nx">pusher</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Pusher</span><span class="p">(</span><span class="nx">$</span><span class="p">(</span><span class="s1">&#39;#chat&#39;</span><span class="p">).</span><span class="nx">data</span><span class="p">().</span><span class="nx">apiKey</span><span class="p">,</span> <span class="p">{</span>
+</span><span class='line'>          <span class="nx">authEndpoint</span><span class="o">:</span> <span class="s1">&#39;/pusher/auth&#39;</span><span class="p">,</span>
+</span><span class='line'>          <span class="nx">auth</span><span class="o">:</span> <span class="p">{</span>
+</span><span class='line'>            <span class="nx">params</span><span class="o">:</span> <span class="nx">currentUser</span>
+</span><span class='line'>          <span class="p">}</span>
+</span><span class='line'>        <span class="p">});</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>So there is a lot going on here that we need to unpack. In the first line we are instantiating a new pusher object (using the pusher.js library which should be included in your Rails' vendor javascript assets - I put it there manually).</p>
+
+<p>That instantiation is using the Api Key which we hid in the html of the form. In a more complex (read secure) application, you would create a secure connection to the backend to retrieve that key, but let&rsquo;s just gloss over that for now.</p>
+
+<p>In addition, that instantiation needs an authorization endpoint, which will exist as a route inside your rails app. Here is how that route is defined:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='ruby'><span class='line'><span class="n">match</span> <span class="s1">&#39;/pusher/auth&#39;</span> <span class="o">=&gt;</span> <span class="s1">&#39;pusher#auth&#39;</span><span class="p">,</span> <span class="ss">via</span><span class="p">:</span> <span class="ss">:post</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>And here is what that route actually does:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+</pre></td><td class='code'><pre><code class='ruby'><span class='line'><span class="k">class</span> <span class="nc">PusherController</span> <span class="o">&lt;</span> <span class="no">ApplicationController</span>
+</span><span class='line'>  <span class="n">protect_from_forgery</span> <span class="ss">except</span><span class="p">:</span> <span class="ss">:auth</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="k">def</span> <span class="nf">auth</span>
+</span><span class='line'>    <span class="n">response</span> <span class="o">=</span> <span class="no">Pusher</span><span class="o">[</span><span class="n">params</span><span class="o">[</span><span class="ss">:channel_name</span><span class="o">]].</span><span class="n">authenticate</span> <span class="n">params</span><span class="o">[</span><span class="ss">:socket_id</span><span class="o">]</span><span class="p">,</span>
+</span><span class='line'>      <span class="ss">user_id</span><span class="p">:</span> <span class="n">params</span><span class="o">[</span><span class="ss">:id</span><span class="o">]</span><span class="p">,</span>
+</span><span class='line'>      <span class="ss">user_info</span><span class="p">:</span> <span class="p">{</span> <span class="nb">name</span><span class="p">:</span> <span class="n">params</span><span class="o">[</span><span class="ss">:name</span><span class="o">]</span> <span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="n">render</span> <span class="ss">json</span><span class="p">:</span> <span class="n">response</span>
+</span><span class='line'>  <span class="k">end</span>
+</span><span class='line'><span class="k">end</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>In addition, you need to make sure your rails app has your pusher key, secret, and app number as environment variables. For more on pusher setup with rails, take a look <a href="https://github.com/pusher/pusher-http-ruby">here</a> at the pusher gem for rails. I took nearly all of the code for setup from there, so it&rsquo;s a good resource.</p>
+
+<p>Now back to Javascript. We know have a pusher variable that represents our &ldquo;pusher object&rdquo;. The next step is to find or create the appropriate channel, and connect to it:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+</pre></td><td class='code'><pre><code class='Javascript'><span class='line'><span class="kd">var</span> <span class="nx">channelID</span> <span class="o">=</span> <span class="s1">&#39;presence-chat-&#39;</span> <span class="o">+</span> <span class="nb">window</span><span class="p">.</span><span class="nx">location</span><span class="p">.</span><span class="nx">href</span><span class="p">.</span><span class="nx">match</span><span class="p">(</span><span class="sr">/lessons\/(\d+)\/?/</span><span class="p">)[</span><span class="mi">1</span><span class="p">];</span>
+</span><span class='line'><span class="kd">var</span> <span class="nx">channel</span> <span class="o">=</span> <span class="nx">pusher</span><span class="p">.</span><span class="nx">subscribe</span><span class="p">(</span><span class="nx">channelID</span><span class="p">);</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Here we take the url, pull the lesson number, and use that to name our nascent channel. This ensures that anyone in the same link will be on the same pusher channel. We then assign that channel to a variable, using the pusher function subscribe(). This will find the channel if it exists, or open it for the first time. For more on how this works, check out the <a href="https://pusher.com/docs">Pusher documentation</a>.</p>
+
+<p>Now we have our channel open for at least one user, we will be using this channel variable as our main point of entry from here on out, so get used to it.</p>
+
+<h2>Step 4: Looking for others on the channel</h2>
+
+<p>This step is fairly simple, we are going to write a short little loop, that will look for other users as long as the channel is open:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="kd">var</span> <span class="nx">peers</span> <span class="o">=</span> <span class="p">{};</span>
+</span><span class='line'><span class="kd">function</span> <span class="nx">lookForPeers</span><span class="p">()</span> <span class="p">{</span>
+</span><span class='line'>  <span class="k">for</span> <span class="p">(</span><span class="kd">var</span> <span class="nx">userId</span> <span class="k">in</span> <span class="nx">channel</span><span class="p">.</span><span class="nx">members</span><span class="p">.</span><span class="nx">members</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>    <span class="k">if</span> <span class="p">(</span><span class="nx">userId</span> <span class="o">!=</span> <span class="nx">currentUser</span><span class="p">.</span><span class="nx">id</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>      <span class="kd">var</span> <span class="nx">member</span> <span class="o">=</span> <span class="nx">channel</span><span class="p">.</span><span class="nx">members</span><span class="p">.</span><span class="nx">members</span><span class="p">[</span><span class="nx">userId</span><span class="p">];</span>
+</span><span class='line'>
+</span><span class='line'>      <span class="nx">peers</span><span class="p">[</span><span class="nx">userId</span><span class="p">]</span> <span class="o">=</span> <span class="nx">initiateConnection</span><span class="p">(</span><span class="nx">userId</span><span class="p">,</span> <span class="nx">member</span><span class="p">.</span><span class="nx">name</span><span class="p">);</span>
+</span><span class='line'>    <span class="p">}</span>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>This is a for loop that loops through the guids of all of the members of the channel. If it finds a guid that is not equal to the guid of the current user, it initiates a connection (a piece of code we will see later).</p>
+
+<p>This is why it was important to establish a guid when we created our user. Now, we are going to have to define when this function is called. The way we do that is by binding it as a callback to be called when the channel has been successfully subscribed to, as such:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="nx">channel</span><span class="p">.</span><span class="nx">bind</span><span class="p">(</span><span class="s1">&#39;pusher:subscription_succeeded&#39;</span><span class="p">,</span> <span class="nx">lookForPeers</span><span class="p">);</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>The concept of binding actions to client events (such as a successful subscription to a channel) is part of what makes pusher so powerful and robus - if you are interested in learning more, take a look at <a href="https://pusher.com/docs/client_api_guide/client_events">this piece of documentation</a>.</p>
+
+<h2>Step 5: A Wild User Appears!</h2>
+
+<p>The trick to how this code really works is that it is embedded in the web page. So whenever a new user enters the page, they begin the same process. So in our imaginary case, another person will enter the channel, and go through the steps 2 and 3 and end up subscribing to the same pusher channel.</p>
+
+<p>Once this is done, our callback to look for other peers will be called, initiating the process of connecting our first and second user.</p>
+
+<h2>Step 6: The Handshake and then some</h2>
+
+<p>Now that we have two users occupying the same pusher channel, we need to establish a connection. Establishing any secure connection can be an arduous process, so finding a library that does it for us makes this a lot easier. The library I chose was a fairly easy one to use called <a href="https://github.com/feross/simple-peer">SimplePeer</a>.</p>
+
+<p>Like with most libraries, easiest way to make this work is to pop it in the javascript folder in your vendor directory within the rails app. From there, use is pretty simple.</p>
+
+<p>As we saw earlier, once we find another peer, we are going to call a function called initiateConnection. Here is the function in it&rsquo;s entirety:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="kd">function</span> <span class="nx">initiateConnection</span><span class="p">(</span><span class="nx">peerUserId</span><span class="p">,</span> <span class="nx">peerUserName</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>  <span class="k">return</span> <span class="nx">setupPeer</span><span class="p">(</span><span class="nx">peerUserId</span><span class="p">,</span> <span class="nx">peerUserName</span><span class="p">,</span> <span class="kc">true</span><span class="p">);</span>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>The reason for having this spacing between the initiation of the handshake and initiate connection is to be able to determine who is the owner of the connection, or who is making it. This initiateConnection function is being called by the person looking for peers, so whoever is setting up this connection is the initiator.</p>
+
+<p>setupPeer() will need to be called by both ends of the connection, so let&rsquo;s take a look at setupPeer(). Fair warning, it&rsquo;s a lengthy bit of code:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="kd">function</span> <span class="nx">setupPeer</span><span class="p">(</span><span class="nx">peerUserId</span><span class="p">,</span> <span class="nx">peerUserName</span><span class="p">,</span> <span class="nx">initiator</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>  <span class="kd">var</span> <span class="nx">peer</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">SimplePeer</span><span class="p">({</span> <span class="nx">initiator</span><span class="o">:</span> <span class="nx">initiator</span><span class="p">,</span> <span class="nx">stream</span><span class="o">:</span> <span class="nx">currentUser</span><span class="p">.</span><span class="nx">stream</span><span class="p">,</span> <span class="nx">trickle</span><span class="o">:</span> <span class="kc">false</span> <span class="p">});</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="nx">peer</span><span class="p">.</span><span class="nx">on</span><span class="p">(</span><span class="s1">&#39;signal&#39;</span><span class="p">,</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">data</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>    <span class="nx">channel</span><span class="p">.</span><span class="nx">trigger</span><span class="p">(</span><span class="s1">&#39;client-signal-&#39;</span> <span class="o">+</span> <span class="nx">peerUserId</span><span class="p">,</span> <span class="p">{</span>
+</span><span class='line'>      <span class="nx">userId</span><span class="o">:</span> <span class="nx">currentUser</span><span class="p">.</span><span class="nx">id</span><span class="p">,</span> <span class="nx">userName</span><span class="o">:</span> <span class="nx">currentUser</span><span class="p">.</span><span class="nx">name</span><span class="p">,</span> <span class="nx">data</span><span class="o">:</span> <span class="nx">data</span>
+</span><span class='line'>    <span class="p">});</span>
+</span><span class='line'>  <span class="p">});</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="nx">peer</span><span class="p">.</span><span class="nx">on</span><span class="p">(</span><span class="s1">&#39;stream&#39;</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">stream</span><span class="p">)</span> <span class="p">{</span> <span class="nx">gotRemoteVideo</span><span class="p">(</span><span class="nx">peerUserId</span><span class="p">,</span> <span class="nx">peerUserName</span><span class="p">,</span> <span class="nx">stream</span><span class="p">)</span> <span class="p">});</span>
+</span><span class='line'>  <span class="nx">peer</span><span class="p">.</span><span class="nx">on</span><span class="p">(</span><span class="s1">&#39;close&#39;</span><span class="p">,</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span> <span class="nx">close</span><span class="p">(</span><span class="nx">peerUserId</span><span class="p">,</span> <span class="nx">peerUserName</span><span class="p">)</span> <span class="p">});</span>
+</span><span class='line'>  <span class="nx">$</span><span class="p">(</span><span class="nb">window</span><span class="p">).</span><span class="nx">on</span><span class="p">(</span><span class="s1">&#39;beforeunload&#39;</span><span class="p">,</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span> <span class="nx">close</span><span class="p">(</span><span class="nx">peerUserId</span><span class="p">,</span> <span class="nx">peerUserName</span><span class="p">)</span> <span class="p">});</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="nx">peer</span><span class="p">.</span><span class="nx">on</span><span class="p">(</span><span class="s1">&#39;message&#39;</span><span class="p">,</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">data</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>    <span class="k">if</span> <span class="p">(</span><span class="nx">data</span> <span class="o">==</span> <span class="s1">&#39;__SPEAKING__&#39;</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>      <span class="nx">$</span><span class="p">(</span><span class="s1">&#39;#remoteVideos video&#39;</span><span class="p">).</span><span class="nx">hide</span><span class="p">();</span>
+</span><span class='line'>      <span class="nx">$</span><span class="p">(</span><span class="s2">&quot;#remoteVideos video[data-user-id=&#39;&quot;</span> <span class="o">+</span> <span class="nx">peerUserId</span> <span class="o">+</span> <span class="s2">&quot;&#39;]&quot;</span><span class="p">).</span><span class="nx">show</span><span class="p">();</span>
+</span><span class='line'>    <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+</span><span class='line'>      <span class="nx">appendMessage</span><span class="p">(</span><span class="nx">peerUserName</span><span class="p">,</span> <span class="nx">data</span><span class="p">);</span>
+</span><span class='line'>    <span class="p">}</span>
+</span><span class='line'>  <span class="p">});</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="k">return</span> <span class="nx">peer</span><span class="p">;</span>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>The first thing that&rsquo;s happening is that we are using simple peer to create a peer object. This object is aimed at mirroring the other user, almost like the currentUser variable we set up in the beginning. What happens next is that we assign this peer many messages it can respond to, along with what it should respond with.</p>
+
+<p>The first message is the signal test, this triggers a ping and response between the currentUser and their peer. This is used to establish the connection in the other direction (for the non-initiator). The event that this behaviour triggers is bound later in the following code:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="nx">channel</span><span class="p">.</span><span class="nx">bind</span><span class="p">(</span><span class="s1">&#39;client-signal-&#39;</span> <span class="o">+</span> <span class="nx">currentUser</span><span class="p">.</span><span class="nx">id</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">signal</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>  <span class="kd">var</span> <span class="nx">peer</span> <span class="o">=</span> <span class="nx">peers</span><span class="p">[</span><span class="nx">signal</span><span class="p">.</span><span class="nx">userId</span><span class="p">];</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="k">if</span> <span class="p">(</span><span class="nx">peer</span> <span class="o">===</span> <span class="kc">undefined</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>    <span class="nx">peer</span> <span class="o">=</span> <span class="nx">setupPeer</span><span class="p">(</span><span class="nx">signal</span><span class="p">.</span><span class="nx">userId</span><span class="p">,</span> <span class="nx">signal</span><span class="p">.</span><span class="nx">userName</span><span class="p">,</span> <span class="kc">false</span><span class="p">);</span>
+</span><span class='line'>  <span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="nx">peer</span><span class="p">.</span><span class="nx">on</span><span class="p">(</span><span class="s1">&#39;ready&#39;</span><span class="p">,</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
+</span><span class='line'>    <span class="nx">appendMessage</span><span class="p">(</span><span class="nx">signal</span><span class="p">.</span><span class="nx">userName</span><span class="p">,</span> <span class="s1">&#39;&lt;em&gt;Connected&lt;/em&gt;&#39;</span><span class="p">);</span>
+</span><span class='line'>  <span class="p">});</span>
+</span><span class='line'>  <span class="nx">peer</span><span class="p">.</span><span class="nx">signal</span><span class="p">(</span><span class="nx">signal</span><span class="p">.</span><span class="nx">data</span><span class="p">);</span>
+</span><span class='line'><span class="p">});</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>The next message is a stream, it is the basic request for the video stream, which triggers the gotRemoteVideo function which we will take a look at in a second.</p>
+
+<p>The next message is close, which severs the connection. If you take a look at the next line of code, it ensures that if the window ever closes the connection is automatically severed.</p>
+
+<p>The rest of the code revolves around a couple of bonus functions, the first is live messaging between the two. The other is making sure that whoever is speaking has their video featured on the remote video feed. We&rsquo;ll revisit these later in our bonus section.</p>
+
+<h2>Step 7: Gettin' Dat Video</h2>
+
+<p>So as we&rsquo;ve seen both when we create our user and establish the connection with our peer, we are always setting a stream object that we&rsquo;ve taken from webRTC. That stream object is about to be put to use to complete our video chat. So once the stream has been received, we need to render it into usable video. Thankfully, that is fairly easy to do:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="kd">function</span> <span class="nx">gotRemoteVideo</span><span class="p">(</span><span class="nx">userId</span><span class="p">,</span> <span class="nx">userName</span><span class="p">,</span> <span class="nx">stream</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>  <span class="kd">var</span> <span class="nx">video</span> <span class="o">=</span> <span class="nx">$</span><span class="p">(</span><span class="s2">&quot;&lt;video autoplay data-user-id=&#39;&quot;</span> <span class="o">+</span> <span class="nx">userId</span> <span class="o">+</span> <span class="s2">&quot;&#39;/&gt;&quot;</span><span class="p">);</span>
+</span><span class='line'>  <span class="nx">video</span><span class="p">[</span><span class="mi">0</span><span class="p">].</span><span class="nx">src</span> <span class="o">=</span> <span class="nb">window</span><span class="p">.</span><span class="nx">URL</span><span class="p">.</span><span class="nx">createObjectURL</span><span class="p">(</span><span class="nx">stream</span><span class="p">);</span>
+</span><span class='line'>  <span class="nx">$</span><span class="p">(</span><span class="s1">&#39;#remoteVideos&#39;</span><span class="p">).</span><span class="nx">append</span><span class="p">(</span><span class="nx">video</span><span class="p">);</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="kd">var</span> <span class="nx">preview</span> <span class="o">=</span> <span class="nx">$</span><span class="p">(</span><span class="s2">&quot;&lt;li data-user-id=&#39;&quot;</span> <span class="o">+</span> <span class="nx">userId</span> <span class="o">+</span> <span class="s2">&quot;&#39;&gt;&quot;</span><span class="p">);</span>
+</span><span class='line'>  <span class="nx">preview</span><span class="p">.</span><span class="nx">append</span><span class="p">(</span><span class="s2">&quot;&lt;video autoplay/&gt;&quot;</span><span class="p">);</span>
+</span><span class='line'>  <span class="nx">preview</span><span class="p">.</span><span class="nx">append</span><span class="p">(</span><span class="s2">&quot;&lt;div class=&#39;name&#39;&gt;&quot;</span> <span class="o">+</span> <span class="nx">userName</span> <span class="o">+</span> <span class="s2">&quot;&lt;/div&gt;&lt;/li&gt;&quot;</span><span class="p">);</span>
+</span><span class='line'>  <span class="nx">preview</span><span class="p">.</span><span class="nx">find</span><span class="p">(</span><span class="s1">&#39;video&#39;</span><span class="p">)[</span><span class="mi">0</span><span class="p">].</span><span class="nx">src</span> <span class="o">=</span> <span class="nb">window</span><span class="p">.</span><span class="nx">URL</span><span class="p">.</span><span class="nx">createObjectURL</span><span class="p">(</span><span class="nx">stream</span><span class="p">);</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="nx">$</span><span class="p">(</span><span class="s1">&#39;#allVideos&#39;</span><span class="p">).</span><span class="nx">append</span><span class="p">(</span><span class="nx">preview</span><span class="p">);</span>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>So here we are creating an html video object, setting it&rsquo;s feed to the stream object we received, and appending it to the big screen (#remoteVideos). In addition, we are creating a smaller preview object to place at the bottom of the screen (much like they do on Google Hangouts).</p>
+
+<p>And there you have it! Two way video! Obviously there are lots of places this can go wrong, especially in the connection pusher. Luckily, pusher provides a very handy interface to handle all these debugging problems, and checking that status of the connections you&rsquo;ve made. Just checkout the debug console of your <a href="https://dashboard.pusher.com/">pusher dashboard</a>.</p>
+
+<h2>Steps 8 &amp; 9, HAVEN&rsquo;T YOU HAD ENOUGH ALREADY?!</h2>
+
+<p>So there are a couple other tricks that this code does to replicate the functionality of something like google hangouts.</p>
+
+<p>The first is using Hark.js, a library that can identify speech, to send a signal back and forth that indicates when someone is speaking.</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="kd">var</span> <span class="nx">speech</span> <span class="o">=</span> <span class="nx">hark</span><span class="p">(</span><span class="nx">currentUser</span><span class="p">.</span><span class="nx">stream</span><span class="p">);</span>
+</span><span class='line'>
+</span><span class='line'><span class="nx">speech</span><span class="p">.</span><span class="nx">on</span><span class="p">(</span><span class="s1">&#39;speaking&#39;</span><span class="p">,</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
+</span><span class='line'>  <span class="k">for</span> <span class="p">(</span><span class="kd">var</span> <span class="nx">userId</span> <span class="k">in</span> <span class="nx">peers</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>    <span class="kd">var</span> <span class="nx">peer</span> <span class="o">=</span> <span class="nx">peers</span><span class="p">[</span><span class="nx">userId</span><span class="p">];</span>
+</span><span class='line'>    <span class="nx">peer</span><span class="p">.</span><span class="nx">send</span><span class="p">(</span><span class="s1">&#39;__SPEAKING__&#39;</span><span class="p">);</span>
+</span><span class='line'>  <span class="p">}</span>
+</span><span class='line'><span class="p">});</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>This signal (which we&rsquo;ve actually already seen!), will trigger a hiding and showing of the correct remote video feed.</p>
+
+<p>The messages is a bit more complicated, I have not gotten it to work in both directions 100%. But you&rsquo;ve already seen a large chunk of the code. Here is the last bit:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="nx">$</span><span class="p">(</span><span class="s1">&#39;#send-message&#39;</span><span class="p">).</span><span class="nx">submit</span><span class="p">(</span><span class="kd">function</span><span class="p">(</span><span class="nx">e</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>  <span class="nx">e</span><span class="p">.</span><span class="nx">preventDefault</span><span class="p">();</span>
+</span><span class='line'>  <span class="kd">var</span> <span class="nx">$input</span> <span class="o">=</span> <span class="nx">$</span><span class="p">(</span><span class="k">this</span><span class="p">).</span><span class="nx">find</span><span class="p">(</span><span class="s1">&#39;input&#39;</span><span class="p">),</span>
+</span><span class='line'>      <span class="nx">message</span> <span class="o">=</span> <span class="nx">$input</span><span class="p">.</span><span class="nx">val</span><span class="p">();</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="nx">$input</span><span class="p">.</span><span class="nx">val</span><span class="p">(</span><span class="s1">&#39;&#39;</span><span class="p">);</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="k">for</span> <span class="p">(</span><span class="kd">var</span> <span class="nx">userId</span> <span class="k">in</span> <span class="nx">peers</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>    <span class="kd">var</span> <span class="nx">peer</span> <span class="o">=</span> <span class="nx">peers</span><span class="p">[</span><span class="nx">userId</span><span class="p">];</span>
+</span><span class='line'>    <span class="nx">peer</span><span class="p">.</span><span class="nx">send</span><span class="p">(</span><span class="nx">message</span><span class="p">);</span>
+</span><span class='line'>  <span class="p">}</span>
+</span><span class='line'>  <span class="nx">appendMessage</span><span class="p">(</span><span class="nx">currentUser</span><span class="p">.</span><span class="nx">name</span><span class="p">,</span> <span class="nx">message</span><span class="p">);</span>
+</span><span class='line'><span class="p">});</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>There is a message bar that we&rsquo;ve defined on our html page. When a message is submitted, it is sent out to every peer. As we&rsquo;ve seen in the listening functions we&rsquo;ve set on a peer, when that message is received, it is appended to the message box at the bottom of the screen.</p>
+
+<p>The truth of the matter is, all of these bells and whistles are fairly simple once you have the connection established. Pushed is an incredibly powerful piece of technology, that I would heartily recommend exposing yourself to!</p>
+
+<h2>TLDR</h2>
+
+<p><img src="https://media.giphy.com/media/iNwXHhkqlfOla/giphy.gif" alt="VIDEOOOO" /></p>
+
+<h2>Resources:</h2>
+
+<ul>
+<li><a href="https://pusher.com/tutorials/webrtc_chat">Pusher&rsquo;s Tutorial on WebRTC</a></li>
+<li><a href="http://blog.carbonfive.com/2014/10/16/webrtc-made-simple/">CarbonFive&rsquo;s WebRTC Setup</a></li>
+<li><a href="https://github.com/feross/simple-peer">Simple Peer</a></li>
+<li><a href="http://www.html5rocks.com/en/tutorials/webrtc/basics/">WebRTC Basics from HTML5Rocks</a></li>
+<li><a href="https://pusher.com/docs">Pusher Documentation</a></li>
+</ul>
+
+</div>
+
+
+  <footer>
+    <p class="meta">
+      
+  
+
+<span class="byline author vcard">Posted by <span class="fn">Adam May</span></span>
+
+      
+
+
+
+
+<time class='entry-date' datetime='2016-02-11T16:06:41-05:00'><span class='date'><span class='date-month'>Feb</span> <span class='date-day'>11</span><span class='date-suffix'>th</span>, <span class='date-year'>2016</span></span> <span class='time'>4:06 pm</span></time>
+      
+
+<span class="categories">
+  
+    <a class='category' href='/blog/categories/flatiron/'>flatiron</a>, <a class='category' href='/blog/categories/school/'>school</a>
+  
+</span>
+
+
+    </p>
+    
+      <div class="sharing">
+  
+  <a href="//twitter.com/share" class="twitter-share-button" data-url="http://aemrox.github.io/blog/2016/02/11/real-time-video-chat-on-rails-using-webrtc/" data-via="" data-counturl="http://aemrox.github.io/blog/2016/02/11/real-time-video-chat-on-rails-using-webrtc/" >Tweet</a>
+  
+  
+  
+</div>
+
+    
+    <p class="meta">
+      
+        <a class="basic-alignment left" href="/blog/2016/02/03/ruby-fied-javascript-currying/" title="Previous Post: Ruby-fied Javascript Part II: Currying">&laquo; Ruby-fied Javascript Part II: Currying</a>
+      
+      
+    </p>
+  </footer>
+</article>
+
+</div>
+
+<aside class="sidebar">
+  
+    <section>
+  <h1>Recent Posts</h1>
+  <ul id="recent_posts">
+    
+      <li class="post">
+        <a href="/blog/2016/02/11/real-time-video-chat-on-rails-using-webrtc/">Real-Time Video Chat on Rails Using WebRTC</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2016/02/03/ruby-fied-javascript-currying/">Ruby-fied Javascript Part II: Currying</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2016/01/25/ruby-fied-javascript-first-class-functions/">Ruby-fied Javascript Part I: First Class Functions</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2016/01/04/deploying-to-heroku/">Deploying Sinatra to Heroku, or How I Learned to Stop Worrying and Love Postgres</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2015/12/08/the-wonderful-world-of-regex/">The Wonderful World of Regex</a>
+      </li>
+    
+  </ul>
+</section>
+
+
+
+
+
+  
+</aside>
+
+
+    </div>
+  </div>
+  <footer role="contentinfo"><p>
+  Copyright &copy; 2016 - Adam May -
+  <span class="credit">Powered by <a href="http://octopress.org">Octopress</a></span>
+</p>
+
+</footer>
+  
+
+
+
+
+
+
+
+  <script type="text/javascript">
+    (function(){
+      var twitterWidgets = document.createElement('script');
+      twitterWidgets.type = 'text/javascript';
+      twitterWidgets.async = true;
+      twitterWidgets.src = '//platform.twitter.com/widgets.js';
+      document.getElementsByTagName('head')[0].appendChild(twitterWidgets);
+    })();
+  </script>
+
+
+
+
+
+</body>
+</html>
